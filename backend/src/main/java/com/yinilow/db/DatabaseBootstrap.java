@@ -16,10 +16,20 @@ public class DatabaseBootstrap {
 
   public void migrateAndSeed() {
     try (Connection connection = database.connection()) {
-      runSql(connection, migrationSql());
+      if (!schemaExists(connection)) {
+        runSql(connection, migrationSql());
+      }
       runSql(connection, seedSql());
     } catch (SQLException | IOException exception) {
       throw new IllegalStateException("Database bootstrap failed", exception);
+    }
+  }
+
+  private static boolean schemaExists(Connection connection) throws SQLException {
+    try (var statement = connection.prepareStatement("SELECT to_regclass('catalog.product_listings') IS NOT NULL");
+         var row = statement.executeQuery()) {
+      row.next();
+      return row.getBoolean(1);
     }
   }
 
@@ -85,7 +95,9 @@ public class DatabaseBootstrap {
         ('10000000-0000-0000-0000-000000000001', 'IMAGE', '/assets/prod-rugby.jpg', 'PRIMARY', true),
         ('10000000-0000-0000-0000-000000000002', 'IMAGE', '/assets/prod-leather.jpg', 'PRIMARY', true),
         ('10000000-0000-0000-0000-000000000003', 'IMAGE', '/assets/prod-cargo.jpg', 'PRIMARY', true)
-      ON CONFLICT DO NOTHING;
+      EXCEPT
+      SELECT item_unit_id, media_type, url, purpose, approved
+      FROM catalog.item_media;
 
       INSERT INTO catalog.measurements (item_unit_id, measurement_type, value, unit) VALUES
         ('10000000-0000-0000-0000-000000000001', 'chest', 52, 'cm'),
@@ -96,7 +108,9 @@ public class DatabaseBootstrap {
         ('10000000-0000-0000-0000-000000000002', 'sleeve', 63, 'cm'),
         ('10000000-0000-0000-0000-000000000003', 'waist', 41, 'cm'),
         ('10000000-0000-0000-0000-000000000003', 'inseam', 76, 'cm')
-      ON CONFLICT DO NOTHING;
+      EXCEPT
+      SELECT item_unit_id, measurement_type, value, unit
+      FROM catalog.measurements;
       """;
   }
 }
