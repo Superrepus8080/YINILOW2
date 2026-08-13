@@ -1,0 +1,16 @@
+# YINILOW2 — Render Blueprint
+# Static React/Vite storefront prototype. No backend/database yet
+# (product data is hardcoded in src/App.jsx per HANDOFF.md).
+
+services:
+  - type: web
+    name: yinilow2
+    runtime: static
+    repo: https://github.com/Superrepus8080/YINILOW2
+    branch: main
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist/client
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
