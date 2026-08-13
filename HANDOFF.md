@@ -2,12 +2,11 @@
 
 ## Project Summary
 
-YINILOW2 is the storefront prototype for YINILOW, a two-sided marketplace experience with:
+YINILOW2 is now the workspace for the YINILOW Clothing OS platform build.
 
-- Clothing & Accessories
-- Home & Electronics
+The first production release is Clothing OS only. Home, Living, and Electronics are parked for a later phase. Earlier Home/Electronics UI remains as concept work, not launch scope.
 
-The current build is focused on customer-facing discovery and shopping flows. It uses the supplied YINILOW image references as visual direction: warm white/off-white surfaces, black typography, yellow accents, compact commerce cards, bold condensed fashion headings, and cleaner home/electronics layouts.
+The current frontend build is focused on customer-facing discovery and shopping flows. The new backend foundation starts the real production spine: public catalog, public privacy filtering, cart, Add to Bag holds, checkout quote, and PostgreSQL schema constraints.
 
 ## Built So Far
 
@@ -21,12 +20,18 @@ The current build is focused on customer-facing discovery and shopping flows. It
 - Clothing `Stock Drop` live-shopping experience
 - Home `Find My Match` quiz/recommendation experience
 - Mobile responsive checks for the new signature pages
+- Vert.x backend foundation in `backend/`
+- PostgreSQL migration skeleton in `backend/src/main/resources/db/migration/`
+- Unit tests for one-off hold conflict, Add to Bag idempotency, and public catalog privacy
 
 ## Key Files
 
 - `src/App.jsx`: main app state, routes, product data, and screen components
 - `src/styles.css`: full UI styling and responsive rules
 - `src/assets/`: extracted/copy reference and product imagery
+- `backend/`: Vert.x API foundation
+- `backend/src/main/resources/db/migration/V001__core_clothing_os.sql`: first PostgreSQL schema migration
+- `docs/PLATFORM_REVIEW.md`: review of the Clothing OS handoff pack and corrected build direction
 - `README.md`: setup and project overview
 - `design-qa.md`: design QA notes from earlier prototype work
 
@@ -54,6 +59,13 @@ Preview build:
 
 ```bash
 npm run preview
+```
+
+Backend tests:
+
+```bash
+cd backend
+mvn test
 ```
 
 ## Current Frontend Behavior
@@ -108,6 +120,14 @@ Suggested PostgreSQL tables:
 - `stock_drop_items`
 - `orders`
 - `order_items`
+
+Critical first database constraints:
+
+- one active listing per physical item unit
+- one active hold per physical item unit
+- unique payment idempotency key per actor
+- unique provider reference for payment callbacks
+- one open acceptance window per order
 
 ## Next Product Work
 

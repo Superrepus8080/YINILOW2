@@ -1,23 +1,35 @@
 # YINILOW2
 
-YINILOW2 is a React storefront prototype for the YINILOW marketplace concept.
+YINILOW2 is the YINILOW Clothing OS platform workspace.
 
-The product has two customer-facing shopping worlds:
+## Production Scope
 
-- Clothing & Accessories
-- Home & Electronics
+The current production scope is **Clothing OS only**.
+
+Home, Living, and Electronics are parked for a later phase. Some concept UI from earlier exploration still exists in the React prototype, but the production build should follow the clothing handoff pack and the platform review in `docs/PLATFORM_REVIEW.md`.
 
 ## Current Prototype
 
 - Unified YINILOW navigation and world switcher
 - Clothing homepage based on the supplied reference image
-- Home & Electronics homepage based on the supplied reference image
+- Home & Electronics concept homepage from earlier exploration
 - Browse/category pages
 - Product detail pages
 - Dig the Pile experience
 - Stock Drop experience
-- Find My Match experience for home recommendations
+- Find My Match concept screen from earlier exploration
 - Responsive layout checks for desktop and mobile
+
+## Backend Foundation
+
+The `backend/` folder starts the real Vert.x platform spine:
+
+- public catalog endpoints
+- public product DTOs that hide private ownership fields
+- Add to Bag hold command
+- cart quote endpoint
+- PostgreSQL migration skeleton
+- tests for one-off hold conflict and public API privacy
 
 ## Run Locally
 
@@ -40,3 +52,9 @@ npm run preview
 - Database: PostgreSQL
 - Realtime: WebSockets for live drops, cart/grab updates, saved items, and inventory availability
 
+Backend checks:
+
+```bash
+cd backend
+mvn test
+```
