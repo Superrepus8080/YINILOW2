@@ -78,3 +78,7 @@ This repo now starts the real platform with a Vert.x backend foundation:
 - unit tests for one-off hold conflict and idempotent Add to Bag behavior.
 
 The in-memory service is a stepping stone. The production implementation must move hold truth into PostgreSQL transactions using the migration in `backend/src/main/resources/db/migration/V001__core_clothing_os.sql`.
+
+## UI Precision Guide
+
+Use `docs/UI_UX_PRECISION_GUIDE.md` for page-level implementation and QA. It adds the screen-specific attention targets, edge cases, mobile rules, and hard visual failures that should guide every Clothing OS frontend screen.

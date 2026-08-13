@@ -32,6 +32,7 @@ The current frontend build is focused on customer-facing discovery and shopping 
 - `backend/`: Vert.x API foundation
 - `backend/src/main/resources/db/migration/V001__core_clothing_os.sql`: first PostgreSQL schema migration
 - `docs/PLATFORM_REVIEW.md`: review of the Clothing OS handoff pack and corrected build direction
+- `docs/UI_UX_PRECISION_GUIDE.md`: page-level UI/UX precision guide for Clothing OS screens
 - `README.md`: setup and project overview
 - `design-qa.md`: design QA notes from earlier prototype work
 
@@ -138,6 +139,8 @@ Critical first database constraints:
 5. Add realtime Stock Drop item claiming over WebSockets.
 6. Start seller/admin workflows: stock upload, item review, drop creation, fulfillment.
 7. Continue visual matching against the supplied reference screens.
+
+Use `docs/UI_UX_PRECISION_GUIDE.md` before implementing or reviewing each screen. It defines the attention targets, subtleties, edge cases, mobile rules, and hard visual QA failures.
 
 ## Verification Already Done
 

@@ -31,6 +31,11 @@ The `backend/` folder starts the real Vert.x platform spine:
 - PostgreSQL migration skeleton
 - tests for one-off hold conflict and public API privacy
 
+## Product Docs
+
+- `docs/PLATFORM_REVIEW.md`: corrected Clothing OS production scope and build order
+- `docs/UI_UX_PRECISION_GUIDE.md`: page-level visual, interaction, edge-case, mobile, and QA rules for Clothing OS screens
+
 ## Run Locally
 
 ```bash
