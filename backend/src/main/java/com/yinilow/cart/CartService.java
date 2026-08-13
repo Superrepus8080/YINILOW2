@@ -15,9 +15,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CartService {
+  public static final String DEMO_CART_ID = "00000000-0000-0000-0000-000000000001";
+
   private final CatalogReader catalog;
   private final HoldManager holds;
-  private final String activeCartId = "cart_demo";
+  private final String activeCartId = DEMO_CART_ID;
   private final Map<String, JsonObject> cartItems = new LinkedHashMap<>();
   private final Map<String, JsonObject> idempotencyResponses = new ConcurrentHashMap<>();
 

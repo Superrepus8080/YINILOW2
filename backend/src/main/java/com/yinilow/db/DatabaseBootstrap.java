@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import com.yinilow.cart.CartService;
 
 public class DatabaseBootstrap {
   private final Database database;
@@ -56,7 +57,7 @@ public class DatabaseBootstrap {
       ON CONFLICT (slug) DO NOTHING;
 
       INSERT INTO cart.carts (id, status)
-      VALUES ('00000000-0000-0000-0000-000000000001', 'ACTIVE')
+      VALUES ('%s', 'ACTIVE')
       ON CONFLICT (id) DO NOTHING;
 
       INSERT INTO catalog.item_units (
@@ -111,6 +112,6 @@ public class DatabaseBootstrap {
       EXCEPT
       SELECT item_unit_id, measurement_type, value, unit
       FROM catalog.measurements;
-      """;
+      """.formatted(CartService.DEMO_CART_ID);
   }
 }
