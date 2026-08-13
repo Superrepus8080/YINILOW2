@@ -9,7 +9,7 @@ class DatabaseConfigTest {
   void convertsRenderDatabaseUrlToJdbcUrl() {
     DatabaseConfig config = DatabaseConfig.fromRenderUrl("postgres://user:pass@host.render.com:5432/yinilow");
 
-    assertEquals("jdbc:postgresql://host.render.com:5432/yinilow?sslmode=require", config.jdbcUrl());
+    assertEquals("jdbc:postgresql://host.render.com:5432/yinilow?sslmode=require&connectTimeout=10&socketTimeout=20", config.jdbcUrl());
     assertEquals("user", config.username());
     assertEquals("pass", config.password());
   }
@@ -18,6 +18,6 @@ class DatabaseConfigTest {
   void keepsExplicitQueryString() {
     DatabaseConfig config = DatabaseConfig.fromRenderUrl("postgres://u:p@host/yinilow?sslmode=disable");
 
-    assertEquals("jdbc:postgresql://host/yinilow?sslmode=disable", config.jdbcUrl());
+    assertEquals("jdbc:postgresql://host/yinilow?sslmode=disable&connectTimeout=10&socketTimeout=20", config.jdbcUrl());
   }
 }

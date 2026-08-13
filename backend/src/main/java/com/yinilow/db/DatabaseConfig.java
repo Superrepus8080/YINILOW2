@@ -27,10 +27,10 @@ public record DatabaseConfig(String jdbcUrl, String username, String password) {
         }
       }
 
-      String query = uri.getQuery();
+      String query = withTimeouts(uri.getQuery());
       String port = uri.getPort() > 0 ? ":" + uri.getPort() : "";
       String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + port + uri.getPath()
-        + (query == null || query.isBlank() ? "?sslmode=require" : "?" + query);
+        + "?" + query;
       return new DatabaseConfig(jdbcUrl, username, password);
     } catch (URISyntaxException exception) {
       throw new IllegalArgumentException("DATABASE_URL is not a valid URL", exception);
@@ -39,5 +39,16 @@ public record DatabaseConfig(String jdbcUrl, String username, String password) {
 
   private static String decode(String value) {
     return java.net.URLDecoder.decode(value, StandardCharsets.UTF_8);
+  }
+
+  private static String withTimeouts(String query) {
+    String base = query == null || query.isBlank() ? "sslmode=require" : query;
+    if (!base.contains("connectTimeout=")) {
+      base += "&connectTimeout=10";
+    }
+    if (!base.contains("socketTimeout=")) {
+      base += "&socketTimeout=20";
+    }
+    return base;
   }
 }

@@ -19,14 +19,15 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 
 public class MainVerticle extends AbstractVerticle {
-  private CatalogReader catalog;
-  private HoldManager holds;
-  private CartService carts;
-  private String dataMode;
+  private volatile CatalogReader catalog;
+  private volatile HoldManager holds;
+  private volatile CartService carts;
+  private volatile String dataMode;
 
   @Override
   public void start(Promise<Void> startPromise) {
-    initializeDataServices();
+    initializeMemoryServices("memory");
+    initializePostgresInBackground();
 
     Router router = Router.router(vertx);
     router.route().handler(CorsHandler.create()
@@ -93,22 +94,38 @@ public class MainVerticle extends AbstractVerticle {
       .onFailure(startPromise::fail);
   }
 
-  private void initializeDataServices() {
+  private void initializeMemoryServices(String mode) {
+    catalog = CatalogService.seeded();
+    holds = new HoldService();
+    carts = new CartService(catalog, holds);
+    dataMode = mode;
+  }
+
+  private void initializePostgresInBackground() {
     DatabaseConfig config = DatabaseConfig.fromEnvironment();
     if (config == null) {
-      catalog = CatalogService.seeded();
-      holds = new HoldService();
-      carts = new CartService(catalog, holds);
-      dataMode = "memory";
       return;
     }
 
-    Database database = new Database(config);
-    new DatabaseBootstrap(database).migrateAndSeed();
-    catalog = new PostgresCatalogService(database);
-    holds = new PostgresHoldService(database);
-    carts = new CartService(catalog, holds);
-    dataMode = "postgres";
+    dataMode = "postgres_starting";
+    vertx.executeBlocking(() -> {
+      Database database = new Database(config);
+      new DatabaseBootstrap(database).migrateAndSeed();
+      CatalogReader postgresCatalog = new PostgresCatalogService(database);
+      HoldManager postgresHolds = new PostgresHoldService(database);
+      return new DataServices(postgresCatalog, postgresHolds, new CartService(postgresCatalog, postgresHolds));
+    }).onSuccess(services -> {
+      catalog = services.catalog();
+      holds = services.holds();
+      carts = services.carts();
+      dataMode = "postgres";
+    }).onFailure(error -> {
+      error.printStackTrace();
+      initializeMemoryServices("memory_database_unavailable");
+    });
+  }
+
+  private record DataServices(CatalogReader catalog, HoldManager holds, CartService carts) {
   }
 
   private static void notFound(io.vertx.ext.web.RoutingContext ctx, String code) {

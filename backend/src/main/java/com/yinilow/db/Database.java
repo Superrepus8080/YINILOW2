@@ -12,6 +12,7 @@ public class Database {
   }
 
   public Connection connection() throws SQLException {
+    DriverManager.setLoginTimeout(10);
     return DriverManager.getConnection(config.jdbcUrl(), config.username(), config.password());
   }
 }
