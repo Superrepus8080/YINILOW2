@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class HoldService {
+public class HoldService implements HoldManager {
   private static final Duration DEFAULT_HOLD_TIME = Duration.ofMinutes(10);
   private final Clock clock;
   private final Map<String, Hold> activeHoldByItemUnit = new ConcurrentHashMap<>();

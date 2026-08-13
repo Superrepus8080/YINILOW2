@@ -100,6 +100,7 @@ CREATE TABLE catalog.item_units (
 
 CREATE TABLE catalog.product_listings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_code TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
   description TEXT NOT NULL DEFAULT '',

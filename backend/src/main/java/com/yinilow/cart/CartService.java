@@ -1,8 +1,9 @@
 package com.yinilow.cart;
 
-import com.yinilow.catalog.CatalogService;
+import com.yinilow.catalog.CatalogReader;
 import com.yinilow.catalog.Listing;
 import com.yinilow.inventory.Hold;
+import com.yinilow.inventory.HoldManager;
 import com.yinilow.inventory.HoldService;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -14,13 +15,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CartService {
-  private final CatalogService catalog;
-  private final HoldService holds;
+  private final CatalogReader catalog;
+  private final HoldManager holds;
   private final String activeCartId = "cart_demo";
   private final Map<String, JsonObject> cartItems = new LinkedHashMap<>();
   private final Map<String, JsonObject> idempotencyResponses = new ConcurrentHashMap<>();
 
-  public CartService(CatalogService catalog, HoldService holds) {
+  public CartService(CatalogReader catalog, HoldManager holds) {
     this.catalog = catalog;
     this.holds = holds;
   }

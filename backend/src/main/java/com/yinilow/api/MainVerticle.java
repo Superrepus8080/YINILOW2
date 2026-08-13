@@ -1,8 +1,15 @@
 package com.yinilow.api;
 
+import com.yinilow.catalog.CatalogReader;
 import com.yinilow.catalog.CatalogService;
+import com.yinilow.catalog.PostgresCatalogService;
 import com.yinilow.cart.CartService;
+import com.yinilow.db.Database;
+import com.yinilow.db.DatabaseBootstrap;
+import com.yinilow.db.DatabaseConfig;
+import com.yinilow.inventory.HoldManager;
 import com.yinilow.inventory.HoldService;
+import com.yinilow.inventory.PostgresHoldService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.Promise;
@@ -12,12 +19,15 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 
 public class MainVerticle extends AbstractVerticle {
-  private final CatalogService catalog = CatalogService.seeded();
-  private final HoldService holds = new HoldService();
-  private final CartService carts = new CartService(catalog, holds);
+  private CatalogReader catalog;
+  private HoldManager holds;
+  private CartService carts;
+  private String dataMode;
 
   @Override
   public void start(Promise<Void> startPromise) {
+    initializeDataServices();
+
     Router router = Router.router(vertx);
     router.route().handler(CorsHandler.create()
       .addOrigin("https://yinilow2.onrender.com")
@@ -35,7 +45,8 @@ public class MainVerticle extends AbstractVerticle {
 
     router.get("/health").handler(ctx -> ctx.json(new JsonObject()
       .put("status", "ok")
-      .put("service", "yinilow-clothing-os-api")));
+      .put("service", "yinilow-clothing-os-api")
+      .put("dataMode", dataMode)));
 
     router.get("/api/v1/config/feature-flags").handler(ctx -> ctx.json(new JsonObject()
       .put("digPile.enabled", true)
@@ -80,6 +91,24 @@ public class MainVerticle extends AbstractVerticle {
       .listen(port)
       .onSuccess(server -> startPromise.complete())
       .onFailure(startPromise::fail);
+  }
+
+  private void initializeDataServices() {
+    DatabaseConfig config = DatabaseConfig.fromEnvironment();
+    if (config == null) {
+      catalog = CatalogService.seeded();
+      holds = new HoldService();
+      carts = new CartService(catalog, holds);
+      dataMode = "memory";
+      return;
+    }
+
+    Database database = new Database(config);
+    new DatabaseBootstrap(database).migrateAndSeed();
+    catalog = new PostgresCatalogService(database);
+    holds = new PostgresHoldService(database);
+    carts = new CartService(catalog, holds);
+    dataMode = "postgres";
   }
 
   private static void notFound(io.vertx.ext.web.RoutingContext ctx, String code) {

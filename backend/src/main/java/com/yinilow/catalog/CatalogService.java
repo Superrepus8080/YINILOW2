@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class CatalogService {
+public class CatalogService implements CatalogReader {
   private final Map<String, Listing> listings;
 
   public CatalogService(List<Listing> seedListings) {
