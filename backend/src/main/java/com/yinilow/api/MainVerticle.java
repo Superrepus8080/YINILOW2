@@ -4,6 +4,7 @@ import com.yinilow.catalog.CatalogService;
 import com.yinilow.cart.CartService;
 import com.yinilow.inventory.HoldService;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -18,10 +19,16 @@ public class MainVerticle extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) {
     Router router = Router.router(vertx);
-    router.route().handler(CorsHandler.create().allowedMethod(io.vertx.core.http.HttpMethod.GET)
-      .allowedMethod(io.vertx.core.http.HttpMethod.POST)
-      .allowedMethod(io.vertx.core.http.HttpMethod.PATCH)
-      .allowedMethod(io.vertx.core.http.HttpMethod.DELETE)
+    router.route().handler(CorsHandler.create()
+      .addOrigin("https://yinilow2.onrender.com")
+      .addOriginWithRegex("https://.*\\.onrender\\.com")
+      .addOriginWithRegex("http://localhost:[0-9]+")
+      .addOriginWithRegex("http://127\\.0\\.0\\.1:[0-9]+")
+      .allowedMethod(HttpMethod.GET)
+      .allowedMethod(HttpMethod.POST)
+      .allowedMethod(HttpMethod.PATCH)
+      .allowedMethod(HttpMethod.DELETE)
+      .allowedMethod(HttpMethod.OPTIONS)
       .allowedHeader("content-type")
       .allowedHeader("x-idempotency-key"));
     router.route().handler(BodyHandler.create());

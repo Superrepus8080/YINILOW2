@@ -1,15 +1,28 @@
-# YINILOW2 — Render Blueprint
-# Static React/Vite storefront prototype. No backend/database yet
-# (product data is hardcoded in src/App.jsx per HANDOFF.md).
+# YINILOW2 Render Blueprint
+# Static React/Vite storefront plus Vert.x API.
 
 services:
+  - type: web
+    name: yinilow2-api
+    runtime: docker
+    repo: https://github.com/Superrepus8080/YINILOW2
+    branch: main
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+
   - type: web
     name: yinilow2
     runtime: static
     repo: https://github.com/Superrepus8080/YINILOW2
     branch: main
+    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist/client
+    envVars:
+      - key: VITE_YINILOW_API_BASE
+        value: https://yinilow2-api.onrender.com
     routes:
       - type: rewrite
         source: /*
