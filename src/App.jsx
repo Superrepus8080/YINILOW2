@@ -1,0 +1,911 @@
+import { useMemo, useState } from "react";
+import {
+  ArrowRight,
+  Bell,
+  ChevronDown as CaretDown,
+  Clock3,
+  Circle,
+  CookingPot,
+  Fan,
+  Gem as Diamond,
+  Grid3X3 as GridNine,
+  HandHeart,
+  Headphones,
+  Heart,
+  House,
+  Leaf,
+  Lock,
+  MapPin,
+  Monitor as Desktop,
+  Package,
+  RotateCcw,
+  Recycle,
+  Search as MagnifyingGlass,
+  ShieldCheck,
+  ShoppingCart,
+  Shuffle,
+  SlidersHorizontal,
+  Sparkles as Sparkle,
+  Truck,
+  User,
+  WashingMachine,
+  Zap as Lightning,
+} from "lucide-react";
+
+import clothingHero from "./assets/clothing-hero-right-full.jpg";
+import clothingNewdrop from "./assets/clothing-newdrop.jpg";
+import clothingBag from "./assets/clothing-bag.jpg";
+import clothingJacketTile from "./assets/clothing-jacket.jpg";
+import clothingLooks from "./assets/clothing-looks.jpg";
+import clothingDigPile from "./assets/clothing-dig-pile.jpg";
+import digPileReference from "./assets/dig-pile-reference.png";
+import prodLeather from "./assets/prod-leather.jpg";
+import prodCargo from "./assets/prod-cargo.jpg";
+import prodJordan from "./assets/prod-jordan.jpg";
+import prodBag from "./assets/prod-bag.jpg";
+import prodWindbreaker from "./assets/prod-windbreaker.jpg";
+import prodRugby from "./assets/prod-rugby.jpg";
+import prodTee from "./assets/prod-tee.jpg";
+import prodSunglasses from "./assets/prod-sunglasses.jpg";
+
+import homeHero from "./assets/home-hero-right-full.jpg";
+import homeSolarStation from "./assets/home-solar-station.jpg";
+import homeSolarPanel from "./assets/home-solar-panel.jpg";
+import homeLedBulbs from "./assets/home-led-bulbs.jpg";
+import homeInverter from "./assets/home-inverter.jpg";
+import homeMicrowave from "./assets/home-microwave.jpg";
+import homeAirfryer from "./assets/home-airfryer.jpg";
+import homeAc from "./assets/home-ac.jpg";
+import homeEarbuds from "./assets/home-earbuds.jpg";
+import findMatchReference from "./assets/find-match-reference.png";
+
+const clothingProducts = [
+  { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
+  { id: "camo-cargo", name: "Camo Cargo Pants", price: "GHC90", image: prodCargo, category: "Men", condition: "Good", seller: "Pile House", location: "Kumasi", note: "Utility cargo fit with checked seams and secure pockets." },
+  { id: "air-jordan", name: "Air Jordan 1 Chicago (Used)", price: "GHC250", image: prodJordan, category: "Shoes", condition: "Used", seller: "Sneaker Loop", location: "Accra", note: "Authenticated pair with visible wear and photo evidence." },
+  { id: "y2k-bag", name: "Y2K Shoulder Bag", price: "GHC75", image: prodBag, category: "Bags & Accessories", condition: "Very good", seller: "Afi Selects", location: "Tema", note: "Compact black shoulder bag with inspected zipper and strap." },
+  { id: "windbreaker", name: "Adidas Windbreaker", price: "GHC55", image: prodWindbreaker, category: "Men", condition: "Good", seller: "North Ridge Finds", location: "Accra", note: "Blue windbreaker, lightweight, checked for stains and tears." },
+  { id: "rugby-shirt", name: "Vintage Rugby Shirt", price: "GHC60", image: prodRugby, category: "Women", condition: "Very good", seller: "Weekend Pile", location: "Cape Coast", note: "Striped rugby shirt with strong color and verified measurements." },
+  { id: "graphic-tee", name: "Graphic Print Tee", price: "GHC25", image: prodTee, category: "New Drop", condition: "Good", seller: "Kwame Thrift", location: "Accra", note: "Soft graphic tee, washed, inspected, and ready to ship." },
+  { id: "retro-sunglasses", name: "Retro Sunglasses", price: "GHC25", image: prodSunglasses, category: "Bags & Accessories", condition: "Excellent", seller: "Afi Selects", location: "Tema", note: "Lightweight retro frame with clean lenses and case-ready packaging." },
+];
+
+const dropProducts = [
+  { ...clothingProducts[4], grabPrice: "GHC38", retail: "GHC65", net: "GHC53", left: "1 left" },
+  { ...clothingProducts[5], name: "Vintage striped polo", grabPrice: "GHC38", retail: "GHC65", net: "GHC53", left: "2 left" },
+  { ...clothingProducts[6], name: "Vintage graphic tee", grabPrice: "GHC28", retail: "GHC55", net: "GHC44", left: "1 left" },
+  { ...clothingProducts[1], name: "90s street bundle (5 pcs)", grabPrice: "GHC120", retail: "GHC210", net: "GHC168", left: "3 left" },
+  { ...clothingProducts[2], grabPrice: "GHC290", retail: "GHC480", net: "GHC382", left: "1 left" },
+  { ...clothingProducts[3], name: "Leather shoulder bag", grabPrice: "GHC75", retail: "GHC150", net: "GHC119", left: "1 left" },
+  { ...clothingProducts[0], name: "Leather jacket", grabPrice: "GHC85", retail: "GHC150", net: "GHC119", left: "1 left" },
+  { ...clothingProducts[7], name: "Retro sunglasses set", grabPrice: "GHC25", retail: "GHC50", net: "GHC39", left: "2 left" },
+];
+
+const homeEnergy = [
+  { id: "solar-station", name: "Solar Power Station 600W", price: "GHS 5,490.00", image: homeSolarStation, rating: "4.8 (132)", category: "Energy Smart", condition: "New", seller: "Energy Hub", location: "Accra", note: "Portable backup power for lights, laptops, routers, and small appliances." },
+  { id: "solar-panel", name: "Solar Panel 200W", price: "GHS 2,199.00", image: homeSolarPanel, rating: "4.6 (96)", category: "Power & Energy", condition: "New", seller: "Energy Hub", location: "Accra", note: "Efficient panel for charging stations and small home backup systems." },
+  { id: "led-bulbs", name: "LED Bulb 12W (Pack of 4)", price: "GHS 120.00", image: homeLedBulbs, rating: "4.7 (556)", category: "Energy Smart", condition: "New", seller: "YINILOW Home", location: "Kumasi", note: "Energy-saving bulb set for daily home use." },
+  { id: "inverter", name: "Inverter 2000VA", price: "GHS 2,990.00", image: homeInverter, rating: "4.6 (381)", category: "Power & Energy", condition: "New", seller: "SmartGrid Ghana", location: "Tema", note: "Stable home inverter for backup power and essential devices." },
+];
+
+const homeTop = [
+  { id: "microwave", name: "Samsung Microwave 20L", price: "GHS 1,199.00", image: homeMicrowave, rating: "4.7 (213)", category: "Kitchen", condition: "New", seller: "YINILOW Home", location: "Accra", note: "Compact microwave for everyday heating and small kitchens." },
+  { id: "airfryer", name: "Philips Air Fryer 4.1L", price: "GHS 1,399.00", image: homeAirfryer, rating: "4.8 (1.2k)", category: "Small Appliances", condition: "New", seller: "Appliance Mart", location: "Accra", note: "Family-size air fryer with warranty support." },
+  { id: "portable-ac", name: "Portable AC 9000BTU", price: "GHS 2,699.00", image: homeAc, rating: "4.5 (97)", category: "Cooling & Fans", condition: "New", seller: "CoolZone", location: "Tema", note: "Portable cooling for rooms and small offices." },
+  { id: "earbuds", name: "Wireless Earbuds Pro", price: "GHS 999.00", image: homeEarbuds, rating: "4.6 (1.7k)", category: "Entertainment", condition: "New", seller: "Tech Yard", location: "Accra", note: "Wireless earbuds with compact charging case." },
+];
+
+const allHomeProducts = [...homeEnergy, ...homeTop];
+
+function Logo() {
+  return (
+    <div className="logo">
+      YINILOW <Sparkle size={21} />
+    </div>
+  );
+}
+
+function Header({ active, setActive }) {
+  const isHome = active === "home";
+  return (
+    <header className="topbar">
+      <Logo />
+      <div className="world-switch" aria-label="Store section">
+        <button
+          className={active === "clothing" ? "selected" : ""}
+          onClick={() => setActive("clothing")}
+        >
+          Clothing & Accessories
+        </button>
+        <button
+          className={active === "home" ? "selected" : ""}
+          onClick={() => setActive("home")}
+        >
+          Home & Electronics
+        </button>
+      </div>
+      <label className="search">
+        <MagnifyingGlass size={22} />
+        <input
+          placeholder={
+            isHome
+              ? "Search appliances, decor & electronics..."
+              : "Search clothing, shoes and accessories..."
+          }
+        />
+      </label>
+      <nav className="utility-nav">
+        <button>
+          <MapPin size={22} /> Ghana <CaretDown size={12} />
+        </button>
+        <button>
+          <Heart size={22} /> Saved
+        </button>
+        <button>
+          <User size={22} /> Account
+        </button>
+        <button className="cart">
+          <ShoppingCart size={23} />
+          <span>{isHome ? 0 : 2}</span>
+          Cart
+        </button>
+      </nav>
+    </header>
+  );
+}
+
+function ClothingPage({ onBrowse, onOpenProduct }) {
+  return (
+    <>
+      <CategoryNav
+        items={[
+          "New Drop",
+          "Women",
+          "Men",
+          "Children",
+          "Shoes",
+          "Bags & Accessories",
+          "Dig the Pile",
+          "Stock Drop",
+        ]}
+        active="Stock Drop"
+        note="ONE MARKETPLACE. TWO SHOPPING WORLDS."
+        onSelect={onBrowse}
+      />
+      <section className="hero fashion-hero">
+        <div className="hero-copy">
+          <h1>DRIP FROM<br />OUR ROOTS</h1>
+          <p>Curated thrift. Fresh drops.<br />Real style. Only on YINILOW.</p>
+          <div className="hero-actions">
+            <button className="dark-btn" onClick={() => onBrowse("New Drop")}>Shop now <ArrowRight size={19} /></button>
+            <button className="ghost-btn" onClick={() => onBrowse("Dig the Pile")}>Dig the pile <ArrowRight size={19} /></button>
+          </div>
+        </div>
+        <img className="fashion-people" src={clothingHero} alt="YINILOW fashion models" />
+        <aside className="hero-stickers">
+          <div className="seal"><Diamond size={31} /> CURATED<br />WITH CARE</div>
+          <span>Support local sellers</span>
+          <p>ONE ACCOUNT<br />ONE CART<br />ONE CHECKOUT</p>
+        </aside>
+      </section>
+      <TrustBar
+        items={[
+          [Diamond, "One-of-ones", "No replicas. Just real finds."],
+          [ShieldCheck, "Trusted sellers", "Verified sellers. Transparent deals."],
+          [Recycle, "Sustainable choice", "Wear more. Waste less. Support local."],
+          [MapPin, "Local love", "From Accra to Kumasi. Made for Ghana."],
+          [Lock, "Secure & easy", "Safe payments. Fast checkout."],
+        ]}
+      />
+      <PromoTiles />
+      <SectionTitle title="Featured products" onAction={() => onBrowse("All Categories")} />
+      <div className="product-grid clothing-grid">
+        {clothingProducts.map((product) => (
+          <ProductCard key={product.id} product={product} fashion onOpen={onOpenProduct} />
+        ))}
+      </div>
+      <TrustBar
+        compact
+        items={[
+          [ShieldCheck, "18+ only", "This market is for adults."],
+          [ShieldCheck, "Secure & fair", "Payments are safe. No hidden tricks."],
+          [Truck, "Free shipping", "From certain amounts. T&Cs apply."],
+          [Package, "Easy returns", "Not your vibe? We make returns simple."],
+          [MapPin, "We deliver in Ghana", "Fast & reliable delivery nationwide."],
+          [User, "Become a seller", "Join our trusted seller community."],
+        ]}
+      />
+    </>
+  );
+}
+
+function PromoTiles() {
+  const tiles = [
+    ["New Drop", "Fresh pieces. Every week.", "Shop now", clothingNewdrop],
+    ["Trending Pieces", "See what's hot. Shop trending.", "Shop trending", clothingBag],
+    ["Shop by Category", "Find your perfect fit.", "Browse all", clothingJacketTile],
+    ["Curated Looks", "Styled by us. Worn by you.", "Get inspired", clothingLooks],
+    ["Dig the Pile", "Hidden gems. Big energy.", "Dig in", clothingDigPile],
+  ];
+  return (
+    <div className="promo-grid">
+      {tiles.map(([title, body, cta, image], index) => (
+        <article className={index === 4 ? "promo-card source-tile accent" : "promo-card source-tile"} key={title}>
+          <img src={image} alt={`${title}: ${body} ${cta}`} />
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function HomePage({ onBrowse, onOpenProduct }) {
+  return (
+    <>
+      <CategoryNav
+        home
+        items={["Home", "Categories", "Energy Smart", "Stock Drops", "Find My Match"]}
+        active="Home"
+        onSelect={onBrowse}
+      />
+      <section className="hero home-hero">
+        <div className="home-copy">
+          <span>Energy smart living</span>
+          <h1>Smarter homes.<br />Lower bills. Better living.</h1>
+          <p>Discover energy-efficient appliances, smart tech, and everyday essentials for your home.</p>
+          <div className="hero-actions">
+            <button className="dark-btn" onClick={() => onBrowse("Top Picks")}>Shop now <ArrowRight size={19} /></button>
+            <button className="ghost-btn" onClick={() => onBrowse("Categories")}>Explore categories</button>
+          </div>
+          <div className="micro-row">
+            <SmallPromise icon={ShieldCheck} title="1-year warranty" text="On eligible items" />
+            <SmallPromise icon={Truck} title="Islandwide delivery" text="Fast & reliable" />
+            <SmallPromise icon={Recycle} title="Easy returns" text="Hassle-free" />
+          </div>
+        </div>
+        <img className="home-products" src={homeHero} alt="Home appliances and electronics" />
+        <aside className="energy-card">
+          <Leaf size={25} />
+          <h3>Save energy.<br />Save money.</h3>
+          <p>Smart picks for a sustainable home.</p>
+          <button>Learn more <ArrowRight size={15} /></button>
+        </aside>
+      </section>
+      <HomeCategories />
+      <TrustBar
+        compact
+        items={[
+          [Diamond, "Not sure what you need?", "Answer a few quick questions and we'll match you."],
+          [ShieldCheck, "Trusted sellers", "Verified & reliable."],
+          [Lock, "Secure payments", "Safe & encrypted."],
+          [Headphones, "24/7 customer support", "We're here for you."],
+          [MapPin, "Proudly for Ghana", "Supporting local."],
+        ]}
+      />
+      <div className="home-rails">
+        <ProductRail title="Energy Smart Picks" products={homeEnergy} onOpenProduct={onOpenProduct} onViewAll={() => onBrowse("Energy Smart")} />
+        <ProductRail title="Top Picks" products={homeTop} onOpenProduct={onOpenProduct} onViewAll={() => onBrowse("Top Picks")} />
+      </div>
+    </>
+  );
+}
+
+function CategoryNav({ items, active, note, home, onSelect }) {
+  return (
+    <div className={home ? "category-nav home-nav" : "category-nav"}>
+      <nav>
+        {items.map((item) => (
+          <button className={item === active ? "active" : ""} key={item} onClick={() => onSelect?.(item)}>
+            {home && item === "Home" ? <House size={19} /> : null}
+            {home && item === "Find My Match" ? <Shuffle size={18} /> : null}
+            {item}
+            {(item === "Stock Drop" || item === "Stock Drops" || item === "Energy Smart") && (
+              <span className="new-pill">New</span>
+            )}
+            {item === "Categories" ? <CaretDown size={13} /> : null}
+          </button>
+        ))}
+      </nav>
+      {note ? <p>{note}</p> : null}
+    </div>
+  );
+}
+
+function TrustBar({ items, compact = false }) {
+  return (
+    <section className={compact ? "trust-bar compact" : "trust-bar"}>
+      {items.map(([Icon, title, body]) => (
+        <div className="trust-item" key={title}>
+          <Icon size={compact ? 24 : 34} />
+          <div>
+            <strong>{title}</strong>
+            <span>{body}</span>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function SectionTitle({ title, onAction }) {
+  return (
+    <div className="section-title">
+      <h2>{title}</h2>
+      <button onClick={onAction}>View all <ArrowRight size={14} /></button>
+    </div>
+  );
+}
+
+function ProductCard({ product, fashion, onOpen }) {
+  return (
+    <article
+      className="product-card"
+      onClick={() => onOpen?.(product)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen?.(product);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+    >
+      <div className="product-image">
+        <img src={product.image} alt={product.name} />
+      </div>
+      <div className="product-meta">
+        <div>
+          <h3>{product.name}</h3>
+          <strong>{product.price}</strong>
+          {product.rating ? <span className="rating">★ {product.rating}</span> : null}
+        </div>
+        {fashion ? (
+          <button aria-label={`Save ${product.name}`} onClick={(event) => event.stopPropagation()}><Heart size={20} /></button>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function HomeCategories() {
+  const categories = [
+    [CookingPot, "Kitchen"],
+    [Fan, "Small Appliances"],
+    [Fan, "Cooling & Fans"],
+    [HandHeart, "Home Decor"],
+    [WashingMachine, "Laundry"],
+    [Desktop, "Entertainment"],
+    [Lightning, "Power & Energy"],
+    [House, "Smart Home"],
+    [GridNine, "View all"],
+  ];
+  return (
+    <section className="home-categories">
+      {categories.map(([Icon, label]) => (
+        <button key={label}>
+          <Icon size={25} />
+          <span>{label}</span>
+        </button>
+      ))}
+    </section>
+  );
+}
+
+function SmallPromise({ icon: Icon, title, text }) {
+  return (
+    <span>
+      <Icon size={21} />
+      <b>{title}</b>
+      {text}
+    </span>
+  );
+}
+
+function ProductRail({ title, products, onOpenProduct, onViewAll }) {
+  return (
+    <section className="product-rail">
+      <SectionTitle title={title} onAction={onViewAll} />
+      <div className="rail-products">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} onOpen={onOpenProduct} />
+        ))}
+      </div>
+      <button className="rail-next" aria-label={`Next ${title}`}>
+        <ArrowRight size={18} />
+      </button>
+    </section>
+  );
+}
+
+function BrowsePage({ active, category, onBrowse, onOpenProduct }) {
+  const isHome = active === "home";
+  const products = isHome ? allHomeProducts : clothingProducts;
+  const filtered = category && !["All Categories", "Categories", "Top Picks", "Home"].includes(category)
+    ? products.filter((product) => product.category === category || category === "Stock Drop" || category === "Stock Drops" || category === "Dig the Pile")
+    : products;
+  const navItems = isHome
+    ? ["Home", "Categories", "Energy Smart", "Stock Drops", "Find My Match"]
+    : ["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"];
+
+  return (
+    <>
+      <CategoryNav
+        home={isHome}
+        items={navItems}
+        active={category || (isHome ? "Categories" : "New Drop")}
+        note={!isHome ? "ONE MARKETPLACE. TWO SHOPPING WORLDS." : undefined}
+        onSelect={onBrowse}
+      />
+      <section className="browse-shell">
+        <div className="browse-heading">
+          <span>{isHome ? "Home & Electronics" : "Clothing & Accessories"}</span>
+          <h1>{category || "All Categories"}</h1>
+          <p>{isHome ? "Energy-smart essentials, appliances, electronics, and home picks." : "Fresh thrift, accessories, shoes, drops, and curated pile finds."}</p>
+        </div>
+        <aside className="filter-panel">
+          <strong>Filters</strong>
+          <button className="selected">Verified sellers</button>
+          <button>Ready to ship</button>
+          <button>{isHome ? "Warranty eligible" : "One-of-ones"}</button>
+          <button>{isHome ? "Energy smart" : "Fresh drop"}</button>
+        </aside>
+        <div className="browse-results">
+          <div className="browse-toolbar">
+            <span>{filtered.length} items</span>
+            <button>Sort: Recommended <CaretDown size={14} /></button>
+          </div>
+          <div className="browse-grid">
+            {filtered.map((product) => (
+              <ProductCard key={product.id} product={product} fashion={!isHome} onOpen={onOpenProduct} />
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct }) {
+  const isHome = active === "home";
+  const related = (isHome ? allHomeProducts : clothingProducts).filter((item) => item.id !== product.id).slice(0, 4);
+
+  return (
+    <>
+      <CategoryNav
+        home={isHome}
+        items={isHome ? ["Home", "Categories", "Energy Smart", "Stock Drops", "Find My Match"] : ["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        active={product.category}
+        note={!isHome ? "ONE MARKETPLACE. TWO SHOPPING WORLDS." : undefined}
+        onSelect={onBrowse}
+      />
+      <section className="detail-shell">
+        <button className="back-link" onClick={onBack}>Back to browsing</button>
+        <div className="detail-media">
+          <img src={product.image} alt={product.name} />
+        </div>
+        <article className="detail-copy">
+          <span>{product.category} / {product.condition}</span>
+          <h1>{product.name}</h1>
+          <strong>{product.price}</strong>
+          {product.rating ? <p className="rating">Star {product.rating}</p> : null}
+          <p>{product.note}</p>
+          <div className="detail-actions">
+            <button className="dark-btn">Add to cart <ArrowRight size={18} /></button>
+            <button className="ghost-btn"><Heart size={18} /> Save</button>
+          </div>
+        </article>
+        <aside className="detail-trust">
+          <div><ShieldCheck size={24} /><span>Seller verified</span><strong>{product.seller}</strong></div>
+          <div><MapPin size={24} /><span>Ships from</span><strong>{product.location}, Ghana</strong></div>
+          <div><Truck size={24} /><span>Delivery</span><strong>Fast local delivery</strong></div>
+          <div><Lock size={24} /><span>Payment</span><strong>Secure checkout</strong></div>
+        </aside>
+      </section>
+      <section className="related-shell">
+        <SectionTitle title={isHome ? "Related picks" : "More from the pile"} onAction={() => onBrowse("All Categories")} />
+        <div className="browse-grid compact-related">
+          {related.map((item) => (
+            <ProductCard key={item.id} product={item} fashion={!isHome} onOpen={onOpenProduct} />
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function DigPilePage({ onBrowse, onOpenProduct }) {
+  const featured = clothingProducts[5];
+  const tags = [
+    ["GHC55", "pile-tag tag-hat"],
+    ["GHC110", "pile-tag tag-jacket"],
+    ["GHC95", "pile-tag tag-jeans"],
+    ["GHC85", "pile-tag tag-tee"],
+    ["GHC75", "pile-tag tag-bag"],
+    ["GHC180", "pile-tag tag-shoe"],
+    ["GHC150", "pile-tag tag-leather"],
+    ["GHC45", "pile-tag tag-cap"],
+  ];
+
+  return (
+    <>
+      <CategoryNav
+        items={["New Drop", "Clothes", "Shoes", "Sellers", "Stock Drop"]}
+        active="Stock Drop"
+        note="DIG DEEP. TAP ANYTHING."
+        onSelect={onBrowse}
+      />
+      <section className="pile-page">
+        <div className="pile-title">
+          <h1>Dig the Pile</h1>
+          <p>Dig deep. Tap anything. Save what you love.</p>
+        </div>
+        <div className="pile-actions">
+          <button className="ghost-btn"><Shuffle size={17} /> Shuffle</button>
+          <button className="ghost-btn"><SlidersHorizontal size={17} /> Filter</button>
+        </div>
+        <div className="pile-stage" aria-label="Interactive thrift pile">
+          <img src={digPileReference} alt="YINILOW thrift pile with tagged clothing" />
+          {tags.map(([label, className]) => (
+            <button key={className} className={className}>{label}</button>
+          ))}
+          <article className="pile-quick-card">
+            <h2>{featured.name}</h2>
+            <strong>GHC85</strong>
+            <span>Only 1 left</span>
+            <div>
+              <button aria-label={`Save ${featured.name}`}><Heart size={22} /></button>
+              <button aria-label="More options">...</button>
+            </div>
+            <button className="dark-btn" onClick={() => onOpenProduct(featured)}>Quick view</button>
+          </article>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function StockDropPage({ onBrowse, onOpenProduct }) {
+  const schedule = [
+    ["Vintage Heatwave", "Streetwear + Vintage", "Ajourd'hui, 6:00 PM", "08:42:31", clothingProducts[0].image],
+    ["90s Sports Classics", "Sportswear + Retro", "Ajourd'hui, 8:00 PM", "10:42:31", clothingProducts[2].image],
+    ["Designer Grails", "Luxury + Premium", "Demain, 12:00 PM", "1D 02:42:31", clothingProducts[3].image],
+    ["Y2K Essentials", "Y2K + Streetwear", "Demain, 3:00 PM", "1D 05:42:31", clothingProducts[6].image],
+  ];
+  const recap = [
+    ["Urban Essentials", "May 25, 2025", [prodLeather, prodCargo, prodBag], "48/48"],
+    ["Archive Picks", "May 23, 2025", [prodTee, prodJordan], "36/36"],
+    ["Nike Heat Drop", "May 21, 2025", [prodJordan], "52/52"],
+  ];
+
+  return (
+    <>
+      <CategoryNav
+        items={["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        active="Stock Drop"
+        note="LIVE DROPS. FIRST COME, FIRST GRAB."
+        onSelect={onBrowse}
+      />
+      <section className="drop-hero">
+        <div>
+          <h1>Stock Drop</h1>
+          <p>Real drops. Real people. Real pieces. Join live drops for a chance to grab exclusive items before they are gone.</p>
+        </div>
+        <TrustBar
+          compact
+          items={[
+            [ShieldCheck, "18+ only", "ID verified participants"],
+            [Lock, "Secure & fair", "Transparent fees. No hidden cuts."],
+            [Recycle, "Live drops", "Real-time stock. First come, first grab."],
+          ]}
+        />
+        <button className="grab-badge">YINILOW<br />GRAB</button>
+      </section>
+      <section className="drop-dashboard">
+        <div className="drop-main">
+          <div className="drop-tabs">
+            <button className="selected">Single pieces</button>
+            <button>3+ deals</button>
+            <button>6+ deals</button>
+            <button className="timer"><Clock3 size={15} /> Ends in 08:42</button>
+            <button><Bell size={15} /> Drop alerts on</button>
+          </div>
+          <div className="drop-grid">
+            {dropProducts.map((product, index) => (
+              <article className="drop-card" key={`${product.id}-${index}`}>
+                <span>{index === 6 ? "Grabbed" : product.left}</span>
+                <div className="drop-image"><img src={product.image} alt={product.name} /></div>
+                <h3>{product.name}</h3>
+                <dl>
+                  <div><dt>Acq. price</dt><dd>{product.grabPrice}</dd></div>
+                  <div><dt>Target retail</dt><dd>{product.retail}</dd></div>
+                  <div><dt>Est. net</dt><dd>{product.net}</dd></div>
+                </dl>
+                <button className={index === 6 ? "grabbed" : ""} onClick={() => onOpenProduct(product)}>
+                  {index === 6 ? "Grabbed" : "Grab"}
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
+        <aside className="grab-panel">
+          <div className="grab-title"><h2>Your grab (3)</h2><span>Live</span></div>
+          {dropProducts.slice(1, 4).map((product) => (
+            <div className="grab-line" key={product.id}>
+              <img src={product.image} alt={product.name} />
+              <div><strong>{product.name}</strong><span>Qty: 1</span></div>
+              <b>{product.grabPrice}</b>
+            </div>
+          ))}
+          <button className="dark-btn">View grab bag (3) <ArrowRight size={17} /></button>
+          <div className="metrics">
+            <h3>Live metrics</h3>
+            <p><span>Grabbers</span><strong>126</strong></p>
+            <p><span>Items left</span><strong>48</strong></p>
+            <p><span>Drop ends in</span><strong>08:42</strong></p>
+          </div>
+          <button className="checkout-btn">Proceed to checkout <ArrowRight size={17} /></button>
+        </aside>
+      </section>
+      <section className="drop-lower">
+        <div className="recap-panel">
+          <SectionTitle title="Past drops recap" onAction={() => onBrowse("Stock Drop")} />
+          <div className="recap-grid">
+            {recap.map(([title, date, images, sold]) => (
+              <article key={title}>
+                <span>Sold out</span>
+                <h3>{title}</h3>
+                <p>{date}</p>
+                <div>{images.map((image, index) => <img key={index} src={image} alt="" />)}</div>
+                <strong>Items sold {sold}</strong>
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="schedule-panel">
+          <SectionTitle title="Upcoming drop schedule" onAction={() => onBrowse("Stock Drop")} />
+          {schedule.map(([title, type, time, left, image], index) => (
+            <article className="schedule-line" key={title}>
+              <img src={image} alt="" />
+              <div><strong>{title}</strong><span>{type}<br />{time}</span></div>
+              <b>{left}</b>
+              {index === 0 ? <em>Next</em> : null}
+            </article>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function FindMatchPage({ onBrowse, onOpenProduct }) {
+  const matchCategories = [
+    [homeMicrowave, "Home Appliances", true],
+    [homeAirfryer, "Kitchenware & Cookware", false],
+    [homeLedBulbs, "Cleaning Equipment", false],
+    [homeEarbuds, "Home Electronics", false],
+    [homeSolarPanel, "Power & Energy", false],
+    [homeHero, "Home Decor", false],
+  ];
+  const recommendations = [
+    { ...homeTop[1], name: "6L Air Fryer", price: "GHS 450.00", tag: "Best for students" },
+    { ...homeTop[0], id: "electric-oven", name: "13L Electric Oven", price: "GHS 280.00", image: homeMicrowave, tag: "Energy smart", note: "Bake, grill and toast with confidence." },
+    { ...homeTop[2], name: "Mini Rechargeable Fan", price: "GHS 120.00", image: homeAc, tag: "Small-space friendly" },
+    { ...homeTop[3], name: "Home Electronics Kit", price: "GHS 280.00", image: homeEarbuds, tag: "Hygiene essential" },
+  ];
+
+  return (
+    <>
+      <CategoryNav
+        home
+        items={["Home", "Categories", "Energy Smart", "Stock Drops", "Find My Match"]}
+        active="Find My Match"
+        onSelect={onBrowse}
+      />
+      <section className="match-page">
+        <aside className="match-quiz">
+          <span className="crumb">Home / Find My Match</span>
+          <div className="match-intro">
+            <div>
+              <h1>Find My Match</h1>
+              <p>Answer a few quick questions and we will recommend the perfect picks for your home.</p>
+            </div>
+            <Sparkle size={48} />
+          </div>
+          <div className="match-steps" aria-label="Quiz progress">
+            {["Shopping for?", "Budget", "Priority", "Room", "Brands", "Results"].map((step, index) => (
+              <div className={index === 0 ? "active" : ""} key={step}>
+                <span>{index + 1}</span>
+                <b>{step}</b>
+              </div>
+            ))}
+          </div>
+          <div className="question-card">
+            <h2>1. What are you shopping for?</h2>
+            <p>Select all that apply</p>
+            <div className="choice-grid">
+              {matchCategories.map(([image, label, selected]) => (
+                <button className={selected ? "selected" : ""} key={label}>
+                  <img src={image} alt="" />
+                  <strong>{label}</strong>
+                  <span>{selected ? "Check" : ""}</span>
+                </button>
+              ))}
+            </div>
+            <button className="checkout-btn">Next: Budget <ArrowRight size={17} /></button>
+          </div>
+        </aside>
+        <section className="match-results">
+          <div className="match-hero">
+            <img src={findMatchReference} alt="Home appliance match recommendations" />
+            <div>
+              <h2>Your perfect match awaits</h2>
+              <p>Based on your answers, we have handpicked the best appliances and essentials for your home.</p>
+              <span>Smart Choices</span>
+              <span>Energy Efficient</span>
+              <span>Great Value</span>
+            </div>
+            <aside>
+              <h3>Your selection summary</h3>
+              <p><b>Shopping for</b> Home Appliances, Kitchenware...</p>
+              <p><b>Budget</b> GHS 200 - GHS 800</p>
+              <p><b>Top Priority</b> Energy Saving, Compact Size</p>
+              <p><b>Room / Use Case</b> Kitchen, Living Room</p>
+              <button>Edit answers</button>
+            </aside>
+          </div>
+          <div className="match-toolbar">
+            <h2>We recommend these for you</h2>
+            <div>
+              <button><Heart size={18} /> Save all</button>
+              <button>Compare (0)</button>
+            </div>
+          </div>
+          <div className="match-products">
+            {recommendations.map((product) => (
+              <article className="match-card" key={product.id}>
+                <span>{product.tag}</span>
+                <div><img src={product.image} alt={product.name} /></div>
+                <h3>{product.name}</h3>
+                <strong>{product.price}</strong>
+                <p>{product.note}</p>
+                <button onClick={() => onOpenProduct(product)}>View details</button>
+                <footer>
+                  <button><Heart size={17} /> Save</button>
+                  <button><Shuffle size={16} /> Compare</button>
+                </footer>
+              </article>
+            ))}
+          </div>
+          <TrustBar
+            compact
+            items={[
+              [Sparkle, "Not sure yet?", "Our expert tool makes smart recommendations."],
+              [ShieldCheck, "Tested for quality", "Every product is carefully tested."],
+              [Leaf, "Energy smart picks", "Save more with efficient appliances."],
+              [Truck, "Delivered in Ghana", "Fast & secure delivery across the country."],
+            ]}
+          />
+          <button className="retake-btn"><RotateCcw size={17} /> Take the quiz again</button>
+        </section>
+      </section>
+      <TrustBar
+        compact
+        items={[
+          [ShieldCheck, "Verified quality", "All products are tested and verified."],
+          [Lock, "Secure payments", "Pay safely with MoMo, cards and cash on delivery."],
+          [Truck, "Delivers across Ghana", "From Accra to Tamale, we deliver to your doorstep."],
+          [Headphones, "Dedicated support", "Our team is just a message away."],
+        ]}
+      />
+    </>
+  );
+}
+
+function Footer({ active }) {
+  const isHome = active === "home";
+  const shopLinks = isHome
+    ? ["All Categories", "Energy Smart", "Stock Drops", "New Arrivals", "Top Picks"]
+    : ["All Categories", "New Drop", "Trending Pieces", "Dig the Pile", "Stock Drop", "Gift Cards"];
+  return (
+    <footer className="footer">
+      <div>
+        <Logo />
+        <p>{isHome ? "Ghana's home for quality home & electronics. Live smarter. Spend wiser." : "Ghana's home of style marketplace. One account. One cart. One checkout. One love."}</p>
+        <div className="socials">
+          <Circle size={17} />
+          <Circle size={17} />
+          <Circle size={17} />
+          <Circle size={17} />
+        </div>
+      </div>
+      <FooterColumn title="Shop" items={shopLinks} />
+      <FooterColumn title="Help & Support" items={["Help Center", "Track My Order", "Shipping & Delivery", "Returns & Refunds", "Contact Us"]} />
+      <FooterColumn title="About Yinilow" items={["About Us", "Careers", "News & Press", "Terms", "Privacy"]} />
+      <div className="newsletter">
+        <h4>Stay Connected</h4>
+        <p>Get deals, drops & energy smart tips straight to your inbox.</p>
+        <label>
+          <input placeholder="Enter your email" />
+          <button><ArrowRight size={18} /></button>
+        </label>
+        <div className="store-badges">
+          <span>Download on the<br /><b>App Store</b></span>
+          <span>Get it on<br /><b>Google Play</b></span>
+        </div>
+      </div>
+      <div className="ghana-card">
+        <h4>We deliver in Ghana</h4>
+        <MapPin size={42} fill="currentColor" />
+      </div>
+    </footer>
+  );
+}
+
+function FooterColumn({ title, items }) {
+  return (
+    <div>
+      <h4>{title}</h4>
+      <ul>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function App() {
+  const [active, setActive] = useState("clothing");
+  const [screen, setScreen] = useState({ type: "home", category: null, product: null });
+  const switchWorld = (world) => {
+    setActive(world);
+    setScreen({ type: "home", category: null, product: null });
+  };
+  const browse = (category) => {
+    if (category === "Home") {
+      setScreen({ type: "home", category: null, product: null });
+      return;
+    }
+    if (active === "clothing" && category === "Dig the Pile") {
+      setScreen({ type: "dig", category, product: null });
+      return;
+    }
+    if (active === "clothing" && category === "Stock Drop") {
+      setScreen({ type: "stockDrop", category, product: null });
+      return;
+    }
+    if (active === "home" && category === "Find My Match") {
+      setScreen({ type: "findMatch", category, product: null });
+      return;
+    }
+    setScreen({ type: "browse", category, product: null });
+  };
+  const openProduct = (product) => setScreen({ type: "product", category: product.category, product });
+  const page = useMemo(() => {
+    if (screen.type === "browse") {
+      return <BrowsePage active={active} category={screen.category} onBrowse={browse} onOpenProduct={openProduct} />;
+    }
+    if (screen.type === "product" && screen.product) {
+      return <ProductDetail active={active} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} />;
+    }
+    if (screen.type === "dig") {
+      return <DigPilePage onBrowse={browse} onOpenProduct={openProduct} />;
+    }
+    if (screen.type === "stockDrop") {
+      return <StockDropPage onBrowse={browse} onOpenProduct={openProduct} />;
+    }
+    if (screen.type === "findMatch") {
+      return <FindMatchPage onBrowse={browse} onOpenProduct={openProduct} />;
+    }
+    return active === "home"
+      ? <HomePage onBrowse={browse} onOpenProduct={openProduct} />
+      : <ClothingPage onBrowse={browse} onOpenProduct={openProduct} />;
+  }, [active, screen]);
+
+  return (
+    <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>
+      <Header active={active} setActive={switchWorld} />
+      {page}
+      <Footer active={active} />
+    </main>
+  );
+}
