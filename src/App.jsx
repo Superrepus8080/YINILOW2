@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Bell,
@@ -58,6 +58,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
+import { addToBag, getCart, getListings } from "./api";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -69,6 +70,35 @@ const clothingProducts = [
   { id: "graphic-tee", name: "Graphic Print Tee", price: "GHC25", image: prodTee, category: "New Drop", condition: "Good", seller: "Kwame Thrift", location: "Accra", note: "Soft graphic tee, washed, inspected, and ready to ship." },
   { id: "retro-sunglasses", name: "Retro Sunglasses", price: "GHC25", image: prodSunglasses, category: "Bags & Accessories", condition: "Excellent", seller: "Afi Selects", location: "Tema", note: "Lightweight retro frame with clean lenses and case-ready packaging." },
 ];
+
+const listingImageById = {
+  lst_vintage_polo: prodRugby,
+  lst_leather_jacket: prodLeather,
+  lst_camo_cargo: prodCargo,
+};
+
+function formatCondition(value) {
+  if (!value) return "Verified";
+  return value.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeApiProduct(product) {
+  return {
+    id: product.listingId,
+    listingId: product.listingId,
+    name: product.title,
+    price: `${product.currency ?? "GHS"} ${Number(product.price ?? 0).toFixed(2)}`,
+    image: listingImageById[product.listingId] ?? prodTee,
+    category: product.category ?? "New Drop",
+    condition: formatCondition(product.conditionPublic),
+    seller: product.sellerTrustLabel ?? "YINILOW Verified",
+    location: "Ghana",
+    note: "Inspected clothing item fulfilled and supported by YINILOW.",
+    stockLabel: product.stockLabel,
+    sizeLabel: product.sizeLabel,
+    availabilityState: product.availabilityState,
+  };
+}
 
 const dropProducts = [
   { ...clothingProducts[4], grabPrice: "GHC38", retail: "GHC65", net: "GHC53", left: "1 left" },
@@ -105,7 +135,7 @@ function Logo() {
   );
 }
 
-function Header({ active, setActive }) {
+function Header({ active, setActive, cartCount = 0 }) {
   const isHome = active === "home";
   return (
     <header className="topbar">
@@ -146,7 +176,7 @@ function Header({ active, setActive }) {
         </button>
         <button className="cart">
           <ShoppingCart size={23} />
-          <span>{isHome ? 0 : 2}</span>
+          <span>{isHome ? 0 : cartCount}</span>
           Cart
         </button>
       </nav>
@@ -154,7 +184,7 @@ function Header({ active, setActive }) {
   );
 }
 
-function ClothingPage({ onBrowse, onOpenProduct }) {
+function ClothingPage({ onBrowse, onOpenProduct, products }) {
   return (
     <>
       <CategoryNav
@@ -200,7 +230,7 @@ function ClothingPage({ onBrowse, onOpenProduct }) {
       <PromoTiles />
       <SectionTitle title="Featured products" onAction={() => onBrowse("All Categories")} />
       <div className="product-grid clothing-grid">
-        {clothingProducts.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} fashion onOpen={onOpenProduct} />
         ))}
       </div>
@@ -356,6 +386,7 @@ function ProductCard({ product, fashion, onOpen }) {
         <div>
           <h3>{product.name}</h3>
           <strong>{product.price}</strong>
+          {product.stockLabel ? <span className="stock-label">{product.stockLabel}</span> : null}
           {product.rating ? <span className="rating">★ {product.rating}</span> : null}
         </div>
         {fashion ? (
@@ -416,9 +447,9 @@ function ProductRail({ title, products, onOpenProduct, onViewAll }) {
   );
 }
 
-function BrowsePage({ active, category, onBrowse, onOpenProduct }) {
+function BrowsePage({ active, category, onBrowse, onOpenProduct, clothingCatalog }) {
   const isHome = active === "home";
-  const products = isHome ? allHomeProducts : clothingProducts;
+  const products = isHome ? allHomeProducts : clothingCatalog;
   const filtered = category && !["All Categories", "Categories", "Top Picks", "Home"].includes(category)
     ? products.filter((product) => product.category === category || category === "Stock Drop" || category === "Stock Drops" || category === "Dig the Pile")
     : products;
@@ -464,9 +495,9 @@ function BrowsePage({ active, category, onBrowse, onOpenProduct }) {
   );
 }
 
-function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct }) {
+function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, clothingCatalog, onAddToBag, bagState }) {
   const isHome = active === "home";
-  const related = (isHome ? allHomeProducts : clothingProducts).filter((item) => item.id !== product.id).slice(0, 4);
+  const related = (isHome ? allHomeProducts : clothingCatalog).filter((item) => item.id !== product.id).slice(0, 4);
 
   return (
     <>
@@ -488,10 +519,24 @@ function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct }) {
           <strong>{product.price}</strong>
           {product.rating ? <p className="rating">Star {product.rating}</p> : null}
           <p>{product.note}</p>
+          {product.stockLabel || product.sizeLabel ? (
+            <div className="detail-badges">
+              {product.stockLabel ? <span>{product.stockLabel}</span> : null}
+              {product.sizeLabel ? <span>Size {product.sizeLabel}</span> : null}
+            </div>
+          ) : null}
           <div className="detail-actions">
-            <button className="dark-btn">Add to cart <ArrowRight size={18} /></button>
+            <button className="dark-btn" disabled={bagState === "adding"} onClick={() => onAddToBag(product)}>
+              {bagState === "adding" ? "Holding..." : "Add to bag"} <ArrowRight size={18} />
+            </button>
             <button className="ghost-btn"><Heart size={18} /> Save</button>
           </div>
+          {bagState === "held" ? (
+            <p className="hold-message">Held for 10 minutes. Checkout before the timer runs out.</p>
+          ) : null}
+          {bagState === "conflict" ? (
+            <p className="hold-message warning">Someone already has this in their bag. Save it or find similar.</p>
+          ) : null}
         </article>
         <aside className="detail-trust">
           <div><ShieldCheck size={24} /><span>Seller verified</span><strong>{product.seller}</strong></div>
@@ -856,9 +901,45 @@ function FooterColumn({ title, items }) {
 export function App() {
   const [active, setActive] = useState("clothing");
   const [screen, setScreen] = useState({ type: "home", category: null, product: null });
+  const [apiProducts, setApiProducts] = useState([]);
+  const [apiStatus, setApiStatus] = useState("fallback");
+  const [cartCount, setCartCount] = useState(0);
+  const [bagState, setBagState] = useState("idle");
+  const clothingCatalog = apiProducts.length ? apiProducts : clothingProducts;
+
+  useEffect(() => {
+    let cancelled = false;
+    getListings()
+      .then((listings) => {
+        if (!cancelled) {
+          setApiProducts(listings.map(normalizeApiProduct));
+          setApiStatus("connected");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setApiProducts([]);
+          setApiStatus("fallback");
+        }
+      });
+
+    getCart()
+      .then((cart) => {
+        if (!cancelled) {
+          setCartCount(cart.items?.length ?? 0);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const switchWorld = (world) => {
     setActive(world);
     setScreen({ type: "home", category: null, product: null });
+    setBagState("idle");
   };
   const browse = (category) => {
     if (category === "Home") {
@@ -878,14 +959,33 @@ export function App() {
       return;
     }
     setScreen({ type: "browse", category, product: null });
+    setBagState("idle");
   };
-  const openProduct = (product) => setScreen({ type: "product", category: product.category, product });
+  const openProduct = (product) => {
+    setBagState("idle");
+    setScreen({ type: "product", category: product.category, product });
+  };
+  const holdProduct = async (product) => {
+    if (active !== "clothing" || !product.listingId) {
+      setBagState("held");
+      return;
+    }
+    setBagState("adding");
+    try {
+      await addToBag(product.listingId);
+      const cart = await getCart().catch(() => null);
+      setCartCount(cart?.items?.length ?? cartCount + 1);
+      setBagState("held");
+    } catch (error) {
+      setBagState(error.status === 409 ? "conflict" : "idle");
+    }
+  };
   const page = useMemo(() => {
     if (screen.type === "browse") {
-      return <BrowsePage active={active} category={screen.category} onBrowse={browse} onOpenProduct={openProduct} />;
+      return <BrowsePage active={active} category={screen.category} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
     }
     if (screen.type === "product" && screen.product) {
-      return <ProductDetail active={active} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} />;
+      return <ProductDetail active={active} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} bagState={bagState} />;
     }
     if (screen.type === "dig") {
       return <DigPilePage onBrowse={browse} onOpenProduct={openProduct} />;
@@ -898,12 +998,17 @@ export function App() {
     }
     return active === "home"
       ? <HomePage onBrowse={browse} onOpenProduct={openProduct} />
-      : <ClothingPage onBrowse={browse} onOpenProduct={openProduct} />;
-  }, [active, screen]);
+      : <ClothingPage onBrowse={browse} onOpenProduct={openProduct} products={clothingCatalog} />;
+  }, [active, screen, clothingCatalog, bagState]);
 
   return (
     <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>
-      <Header active={active} setActive={switchWorld} />
+      <Header active={active} setActive={switchWorld} cartCount={cartCount} />
+      {active === "clothing" ? (
+        <div className="api-status">
+          {apiStatus === "connected" ? "Live catalog connected" : "Prototype catalog fallback"}
+        </div>
+      ) : null}
       {page}
       <Footer active={active} />
     </main>

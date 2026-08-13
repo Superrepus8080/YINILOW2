@@ -1,6 +1,7 @@
 node_modules/
 dist/
 backend/target/
+backend/dependency-reduced-pom.xml
 .env
 .env.*
 *.local

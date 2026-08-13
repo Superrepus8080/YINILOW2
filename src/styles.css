@@ -194,6 +194,20 @@ button {
   letter-spacing: .08em;
 }
 
+.api-status {
+  width: max-content;
+  margin: 8px 0 0 auto;
+  border: 1px solid #e7dfd4;
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #3c362e;
+  padding: 6px 11px;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .05em;
+}
+
 .new-pill {
   border-radius: 999px;
   background: #ffd11c;
@@ -544,6 +558,19 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+.stock-label {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: #fff1ba;
+  color: #15110b;
+  padding: 3px 7px;
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 950;
+}
+
 .home-hero {
   min-height: 306px;
   height: 306px;
@@ -879,6 +906,45 @@ button {
   display: flex;
   gap: 12px;
   margin-top: 24px;
+}
+
+.detail-actions button:disabled {
+  cursor: progress;
+  opacity: .72;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.detail-badges span {
+  border: 1px solid #e4d9ca;
+  border-radius: 999px;
+  background: #fff8dd;
+  padding: 7px 10px;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.hold-message {
+  max-width: 420px;
+  border: 1px solid #d5ebcc;
+  border-radius: 8px;
+  background: #effae9;
+  color: #174f24;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hold-message.warning {
+  border-color: #f1c6b9;
+  background: #fff1eb;
+  color: #9b261c;
 }
 
 .detail-trust {

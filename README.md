@@ -63,3 +63,19 @@ Backend checks:
 cd backend
 mvn test
 ```
+
+Run the API-backed storefront locally:
+
+```bash
+cd backend
+mvn package -DskipTests
+java -jar target/yinilow-clothing-os-api-0.1.0-SNAPSHOT.jar
+```
+
+In another terminal:
+
+```bash
+npm run dev
+```
+
+Then open `http://127.0.0.1:5173/`. The Clothing catalog will load from the Vert.x API through the Vite proxy, and Add to Bag will create a backend hold.
