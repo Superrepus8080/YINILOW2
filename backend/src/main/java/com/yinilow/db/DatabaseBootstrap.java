@@ -92,22 +92,22 @@ public class DatabaseBootstrap {
       ON CONFLICT (listing_id, item_unit_id) DO NOTHING;
 
       INSERT INTO catalog.item_media (item_unit_id, media_type, url, purpose, approved) VALUES
-        ('10000000-0000-0000-0000-000000000001', 'IMAGE', '/assets/prod-rugby.jpg', 'PRIMARY', true),
-        ('10000000-0000-0000-0000-000000000002', 'IMAGE', '/assets/prod-leather.jpg', 'PRIMARY', true),
-        ('10000000-0000-0000-0000-000000000003', 'IMAGE', '/assets/prod-cargo.jpg', 'PRIMARY', true)
+        ('10000000-0000-0000-0000-000000000001'::uuid, 'IMAGE', '/assets/prod-rugby.jpg', 'PRIMARY', true),
+        ('10000000-0000-0000-0000-000000000002'::uuid, 'IMAGE', '/assets/prod-leather.jpg', 'PRIMARY', true),
+        ('10000000-0000-0000-0000-000000000003'::uuid, 'IMAGE', '/assets/prod-cargo.jpg', 'PRIMARY', true)
       EXCEPT
       SELECT item_unit_id, media_type, url, purpose, approved
       FROM catalog.item_media;
 
       INSERT INTO catalog.measurements (item_unit_id, measurement_type, value, unit) VALUES
-        ('10000000-0000-0000-0000-000000000001', 'chest', 52, 'cm'),
-        ('10000000-0000-0000-0000-000000000001', 'length', 69, 'cm'),
-        ('10000000-0000-0000-0000-000000000001', 'shoulder', 45, 'cm'),
-        ('10000000-0000-0000-0000-000000000002', 'chest', 57, 'cm'),
-        ('10000000-0000-0000-0000-000000000002', 'length', 72, 'cm'),
-        ('10000000-0000-0000-0000-000000000002', 'sleeve', 63, 'cm'),
-        ('10000000-0000-0000-0000-000000000003', 'waist', 41, 'cm'),
-        ('10000000-0000-0000-0000-000000000003', 'inseam', 76, 'cm')
+        ('10000000-0000-0000-0000-000000000001'::uuid, 'chest', 52, 'cm'),
+        ('10000000-0000-0000-0000-000000000001'::uuid, 'length', 69, 'cm'),
+        ('10000000-0000-0000-0000-000000000001'::uuid, 'shoulder', 45, 'cm'),
+        ('10000000-0000-0000-0000-000000000002'::uuid, 'chest', 57, 'cm'),
+        ('10000000-0000-0000-0000-000000000002'::uuid, 'length', 72, 'cm'),
+        ('10000000-0000-0000-0000-000000000002'::uuid, 'sleeve', 63, 'cm'),
+        ('10000000-0000-0000-0000-000000000003'::uuid, 'waist', 41, 'cm'),
+        ('10000000-0000-0000-0000-000000000003'::uuid, 'inseam', 76, 'cm')
       EXCEPT
       SELECT item_unit_id, measurement_type, value, unit
       FROM catalog.measurements;
