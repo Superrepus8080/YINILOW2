@@ -103,6 +103,13 @@ export function getCart() {
   return request("/api/v1/cart");
 }
 
+export function recordRealtimeTelemetry(event) {
+  return request("/api/v1/realtime/telemetry", {
+    method: "POST",
+    body: JSON.stringify(event),
+  }).catch(() => null);
+}
+
 export function addToBag(listingId) {
   return request("/api/v1/cart/items", {
     method: "POST",

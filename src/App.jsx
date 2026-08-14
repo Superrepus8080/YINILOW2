@@ -59,7 +59,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, createSellerAccount, getAdminListings, getCart, getListings, getStoredSellerSession, initializePayment, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
+import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, createSellerAccount, getAdminListings, getCart, getListings, getStoredSellerSession, initializePayment, recordRealtimeTelemetry, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
 import { createRealtimeDataChannel } from "./realtime";
 
 const clothingProducts = [
@@ -1298,6 +1298,9 @@ function OrderConfirmationPage({ order, onBrowse }) {
 
 function useDigPileRealtime() {
   const channelRef = useRef(null);
+  const recentTagsRef = useRef([]);
+  const connectionStateRef = useRef("connecting");
+  const viewerCountRef = useRef(1);
   const [connectionState, setConnectionState] = useState("connecting");
   const [viewerCount, setViewerCount] = useState(1);
   const [latencyMs, setLatencyMs] = useState(null);
@@ -1312,10 +1315,20 @@ function useDigPileRealtime() {
       channelRef.current = createRealtimeDataChannel({
         roomId,
         onPeerCount: (count) => {
-          if (mounted) setViewerCount(Math.max(1, Number(count) || 1));
+          if (!mounted) return;
+          const nextCount = Math.max(1, Number(count) || 1);
+          viewerCountRef.current = nextCount;
+          setViewerCount(nextCount);
         },
         onStateChange: (state) => {
-          if (mounted) setConnectionState(state);
+          if (!mounted) return;
+          connectionStateRef.current = state;
+          setConnectionState(state);
+          recordRealtimeTelemetry({
+            type: "presence",
+            roomId,
+            metadata: { state, viewerCount: viewerCountRef.current, at: Date.now() },
+          });
         },
         onMessage: (message) => {
           const payload = message?.payload;
@@ -1325,7 +1338,13 @@ function useDigPileRealtime() {
             return;
           }
           if (payload.kind === "pong" && payload.id?.startsWith(pingPrefix)) {
-            if (mounted) setLatencyMs(Math.max(1, Date.now() - payload.sentAt));
+            const nextLatency = Math.max(1, Date.now() - payload.sentAt);
+            if (mounted) setLatencyMs(nextLatency);
+            recordRealtimeTelemetry({
+              type: "latency",
+              roomId,
+              metadata: { latencyMs: nextLatency, viewerCount: viewerCountRef.current, at: Date.now() },
+            });
             return;
           }
           if (payload.kind === "hover-tag" && mounted) {
@@ -1342,6 +1361,16 @@ function useDigPileRealtime() {
 
     const heartbeat = window.setInterval(() => {
       channelRef.current?.sendTelemetry({ kind: "active", roomId, at: Date.now() });
+      recordRealtimeTelemetry({
+        type: "heartbeat",
+        roomId,
+        metadata: {
+          state: connectionStateRef.current,
+          viewerCount: viewerCountRef.current,
+          recentTags: recentTagsRef.current,
+          at: Date.now(),
+        },
+      });
     }, 4500);
     const latencyProbe = window.setInterval(() => {
       channelRef.current?.sendTelemetry({ kind: "ping", id: `${pingPrefix}-${Date.now()}`, sentAt: Date.now() });
@@ -1357,8 +1386,19 @@ function useDigPileRealtime() {
   }, []);
 
   function trackTag(label) {
+    recentTagsRef.current = [label, ...recentTagsRef.current.filter((tag) => tag !== label)].slice(0, 5);
     setActivity(`You touched ${label}`);
     channelRef.current?.sendTelemetry({ kind: "hover-tag", label, at: Date.now() });
+    recordRealtimeTelemetry({
+      type: "tag-hover",
+      roomId: "dig-pile-main",
+      metadata: {
+        label,
+        viewerCount: viewerCountRef.current,
+        recentTags: recentTagsRef.current,
+        at: Date.now(),
+      },
+    });
   }
 
   return { activity, connectionState, latencyMs, trackTag, viewerCount };

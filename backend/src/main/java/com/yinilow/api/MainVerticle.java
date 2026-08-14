@@ -21,6 +21,7 @@ import com.yinilow.payment.MemoryPaymentService;
 import com.yinilow.payment.PaymentManager;
 import com.yinilow.payment.PostgresPaymentService;
 import com.yinilow.realtime.RealtimeSignalingHub;
+import com.yinilow.realtime.RealtimeTelemetryService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.Promise;
@@ -39,6 +40,7 @@ public class MainVerticle extends AbstractVerticle {
   private volatile PaymentManager payments;
   private final SellerAuthService sellerAuth = new SellerAuthService();
   private final RealtimeSignalingHub realtime = new RealtimeSignalingHub();
+  private final RealtimeTelemetryService realtimeTelemetry = new RealtimeTelemetryService();
   private volatile String dataMode;
 
   @Override
@@ -97,6 +99,11 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/api/v1/seller/accounts").handler(ctx -> {
       JsonObject body = ctx.body().asJsonObject();
       SellerAuthService.AuthResult result = sellerAuth.register(body == null ? new JsonObject() : body);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
+    router.post("/api/v1/realtime/telemetry").handler(ctx -> {
+      JsonObject body = ctx.body().asJsonObject();
+      RealtimeTelemetryService.TelemetryResult result = realtimeTelemetry.record(body == null ? new JsonObject() : body);
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
     router.delete("/api/v1/seller/session").handler(ctx -> {
@@ -195,6 +202,7 @@ public class MainVerticle extends AbstractVerticle {
       Database database = new Database(config);
       new DatabaseBootstrap(database).migrateAndSeed();
       sellerAuth.useDatabase(database);
+      realtimeTelemetry.useDatabase(database);
       CatalogReader postgresCatalog = new PostgresCatalogService(database);
       CatalogAdmin postgresCatalogAdmin = new PostgresCatalogAdmin(database);
       HoldManager postgresHolds = new PostgresHoldService(database);
