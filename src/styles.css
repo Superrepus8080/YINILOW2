@@ -345,7 +345,7 @@ button {
 .fashion-people {
   position: absolute;
   height: 100%;
-  width: calc(100% - 462px);
+  width: calc(100% - 765px);
   left: 462px;
   top: 0;
   object-fit: cover;
@@ -353,7 +353,7 @@ button {
 }
 
 .hero-stickers {
-  display: none;
+  display: grid;
   padding: 25px 50px 20px 0;
   justify-items: center;
   align-content: center;
@@ -550,6 +550,7 @@ button {
 }
 
 .product-card {
+  position: relative;
   min-width: 0;
   cursor: pointer;
   outline: none;
@@ -572,7 +573,8 @@ button {
 .product-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 8px rgba(0, 0, 0, .1));
 }
 
 .product-meta {
@@ -604,9 +606,12 @@ button {
 }
 
 .card-add-btn {
-  width: calc(100% - 16px);
-  height: 32px;
-  margin: 8px 8px 0;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 51px;
+  height: 28px;
+  margin: 0;
   border: 1px solid #15110b;
   border-radius: 6px;
   background: #15110b;
@@ -617,6 +622,18 @@ button {
   text-transform: uppercase;
   font-size: 10px;
   font-weight: 950;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity .16s ease, transform .16s ease;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .18);
+}
+
+.product-card:hover .card-add-btn,
+.product-card:focus-within .card-add-btn,
+.card-add-btn.added,
+.card-add-btn.failed {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .card-add-btn.adding {
@@ -698,15 +715,15 @@ button {
 
 .home-products {
   position: absolute;
-  inset: 0 0 0 460px;
-  width: calc(100% - 460px);
+  inset: 0 160px 0 460px;
+  width: calc(100% - 620px);
   height: 100%;
   object-fit: cover;
   object-position: center;
 }
 
 .energy-card {
-  display: none;
+  display: block;
   align-self: center;
   justify-self: end;
   width: 134px;
