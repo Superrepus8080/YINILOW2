@@ -210,13 +210,14 @@ CREATE TABLE cart.cart_items (
 
 CREATE TABLE orders.orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES platform.users(id),
+  user_id UUID REFERENCES platform.users(id),
   order_number TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL DEFAULT 'DRAFT',
   subtotal NUMERIC(12, 2) NOT NULL,
   service_fee NUMERIC(12, 2) NOT NULL,
   delivery_fee NUMERIC(12, 2) NOT NULL,
   total NUMERIC(12, 2) NOT NULL,
+  delivery_address JSONB NOT NULL DEFAULT '{}'::jsonb,
   payment_status TEXT NOT NULL DEFAULT 'PENDING',
   delivery_status TEXT NOT NULL DEFAULT 'NOT_STARTED',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()

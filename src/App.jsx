@@ -58,7 +58,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, getCart, getListings } from "./api";
+import { addToBag, checkoutQuote, createOrder, getCart, getListings } from "./api";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -580,7 +580,7 @@ function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, cloth
   );
 }
 
-function CartPage({ onBrowse, onOpenProduct, refreshCartCount }) {
+function CartPage({ onBrowse, onOpenProduct, onCheckout, refreshCartCount }) {
   const [cart, setCart] = useState(null);
   const [quote, setQuote] = useState(null);
   const [status, setStatus] = useState("loading");
@@ -691,7 +691,7 @@ function CartPage({ onBrowse, onOpenProduct, refreshCartCount }) {
             ) : (
               <p className="quote-blocked"><Clock3 size={17} /> Add or refresh held items to checkout.</p>
             )}
-            <button className="checkout-btn" disabled={!checkoutAllowed}>Proceed to checkout <ArrowRight size={17} /></button>
+            <button className="checkout-btn" disabled={!checkoutAllowed} onClick={onCheckout}>Proceed to checkout <ArrowRight size={17} /></button>
             <div className="quote-notes">
               <span><ShieldCheck size={18} /> One-off protection active</span>
               <span><Truck size={18} /> Delivery across Ghana</span>
@@ -699,6 +699,159 @@ function CartPage({ onBrowse, onOpenProduct, refreshCartCount }) {
             </div>
           </aside>
         </div>
+      </section>
+    </>
+  );
+}
+
+function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
+  const [quote, setQuote] = useState(null);
+  const [cart, setCart] = useState(null);
+  const [status, setStatus] = useState("loading");
+  const [submitState, setSubmitState] = useState("idle");
+  const [form, setForm] = useState({
+    fullName: "",
+    phone: "",
+    city: "Accra",
+    addressLine: "",
+    notes: "",
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.allSettled([getCart(), checkoutQuote()]).then(([cartResult, quoteResult]) => {
+      if (cancelled) return;
+      if (cartResult.status === "fulfilled") {
+        setCart(cartResult.value);
+        refreshCartCount(cartResult.value.items?.length ?? 0);
+      }
+      if (quoteResult.status === "fulfilled") {
+        setQuote(quoteResult.value);
+      } else if (quoteResult.reason?.payload) {
+        setQuote(quoteResult.reason.payload);
+      }
+      setStatus(cartResult.status === "fulfilled" ? "ready" : "error");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshCartCount]);
+
+  const updateField = (field) => (event) => {
+    setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const canSubmit = Boolean(quote?.checkoutAllowed && form.fullName.trim() && form.phone.trim() && form.addressLine.trim());
+
+  const submitOrder = async (event) => {
+    event.preventDefault();
+    if (!canSubmit || submitState === "submitting") return;
+    setSubmitState("submitting");
+    try {
+      const order = await createOrder(form);
+      refreshCartCount(0);
+      setSubmitState("created");
+      onOrderCreated(order);
+    } catch (error) {
+      setSubmitState(error.status === 409 ? "blocked" : "error");
+    }
+  };
+
+  const items = cart?.items ?? [];
+
+  return (
+    <>
+      <CategoryNav
+        items={["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        active="New Drop"
+        note="DELIVERY. PAYMENT. REVIEW."
+        onSelect={onBrowse}
+      />
+      <section className="checkout-shell">
+        <div className="cart-heading">
+          <span>Secure checkout</span>
+          <h1>Checkout</h1>
+          <p>Confirm delivery details, review your held items, then create the order. Payment connection comes next.</p>
+        </div>
+        <form className="checkout-layout" onSubmit={submitOrder}>
+          <section className="checkout-form-panel">
+            <h2>Delivery details</h2>
+            <div className="checkout-fields">
+              <label>
+                Full name
+                <input value={form.fullName} onChange={updateField("fullName")} placeholder="Your name" />
+              </label>
+              <label>
+                Phone
+                <input value={form.phone} onChange={updateField("phone")} placeholder="024 000 0000" />
+              </label>
+              <label>
+                City
+                <input value={form.city} onChange={updateField("city")} placeholder="Accra" />
+              </label>
+              <label>
+                Delivery address
+                <input value={form.addressLine} onChange={updateField("addressLine")} placeholder="Street, area, landmark" />
+              </label>
+              <label className="wide">
+                Delivery notes
+                <textarea value={form.notes} onChange={updateField("notes")} placeholder="Optional notes for delivery" />
+              </label>
+            </div>
+            <div className="payment-placeholder">
+              <Lock size={21} />
+              <div>
+                <strong>Payment method</strong>
+                <span>Mobile money/card provider will connect here next. This step creates a payment-pending order.</span>
+              </div>
+            </div>
+            {submitState === "blocked" ? <p className="hold-message warning">Checkout is no longer available. Return to your bag and refresh held items.</p> : null}
+            {submitState === "error" ? <p className="hold-message warning">Order could not be created. Please try again.</p> : null}
+          </section>
+          <aside className="quote-panel checkout-review">
+            <h2>Order review</h2>
+            {status === "loading" ? <p className="cart-empty">Loading order...</p> : null}
+            {items.map((item) => (
+              <div className="review-line" key={item.cartItemId}>
+                <span>{item.title}</span>
+                <strong>{formatMoney(item.price, item.currency)}</strong>
+              </div>
+            ))}
+            <dl>
+              <div><dt>Subtotal</dt><dd>{formatMoney(quote?.subtotal, quote?.currency)}</dd></div>
+              <div><dt>Service fee</dt><dd>{formatMoney(quote?.serviceFee, quote?.currency)}</dd></div>
+              <div><dt>Delivery</dt><dd>{formatMoney(quote?.deliveryFee, quote?.currency)}</dd></div>
+              <div className="quote-total"><dt>Total</dt><dd>{formatMoney(quote?.total, quote?.currency)}</dd></div>
+            </dl>
+            <button className="checkout-btn" type="submit" disabled={!canSubmit || submitState === "submitting"}>
+              {submitState === "submitting" ? "Creating order..." : "Create order"} <ArrowRight size={17} />
+            </button>
+          </aside>
+        </form>
+      </section>
+    </>
+  );
+}
+
+function OrderConfirmationPage({ order, onBrowse }) {
+  return (
+    <>
+      <CategoryNav
+        items={["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        active="New Drop"
+        note="ORDER CREATED. PAYMENT NEXT."
+        onSelect={onBrowse}
+      />
+      <section className="confirmation-shell">
+        <ShieldCheck size={46} />
+        <span>Order created</span>
+        <h1>{order?.orderNumber ?? "YINILOW ORDER"}</h1>
+        <p>Your order is reserved and waiting for payment connection. The next build will attach the real payment provider.</p>
+        <div>
+          <strong>{formatMoney(order?.total, order?.currency)}</strong>
+          <em>{order?.status ?? "PAYMENT_PENDING"}</em>
+        </div>
+        <button className="dark-btn" onClick={() => onBrowse("New Drop")}>Continue shopping <ArrowRight size={17} /></button>
       </section>
     </>
   );
@@ -1052,6 +1205,7 @@ export function App() {
   const [apiStatus, setApiStatus] = useState("fallback");
   const [cartCount, setCartCount] = useState(0);
   const [bagState, setBagState] = useState("idle");
+  const [createdOrder, setCreatedOrder] = useState(null);
   const clothingCatalog = apiProducts.length ? apiProducts : clothingProducts;
 
   useEffect(() => {
@@ -1117,6 +1271,15 @@ export function App() {
     setBagState("idle");
     setScreen({ type: "cart", category: "Bag", product: null });
   };
+  const openCheckout = () => {
+    setActive("clothing");
+    setBagState("idle");
+    setScreen({ type: "checkout", category: "Checkout", product: null });
+  };
+  const showOrderCreated = (order) => {
+    setCreatedOrder(order);
+    setScreen({ type: "orderCreated", category: "Order", product: null });
+  };
   const holdProduct = async (product) => {
     if (active !== "clothing" || !product.listingId) {
       setBagState("held");
@@ -1140,7 +1303,13 @@ export function App() {
       return <ProductDetail active={active} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} bagState={bagState} />;
     }
     if (screen.type === "cart") {
-      return <CartPage onBrowse={browse} onOpenProduct={openProduct} refreshCartCount={setCartCount} />;
+      return <CartPage onBrowse={browse} onOpenProduct={openProduct} onCheckout={openCheckout} refreshCartCount={setCartCount} />;
+    }
+    if (screen.type === "checkout") {
+      return <CheckoutPage onBrowse={browse} onOrderCreated={showOrderCreated} refreshCartCount={setCartCount} />;
+    }
+    if (screen.type === "orderCreated") {
+      return <OrderConfirmationPage order={createdOrder} onBrowse={browse} />;
     }
     if (screen.type === "dig") {
       return <DigPilePage onBrowse={browse} onOpenProduct={openProduct} />;
@@ -1154,7 +1323,7 @@ export function App() {
     return active === "home"
       ? <HomePage onBrowse={browse} onOpenProduct={openProduct} />
       : <ClothingPage onBrowse={browse} onOpenProduct={openProduct} products={clothingCatalog} />;
-  }, [active, screen, clothingCatalog, bagState]);
+  }, [active, screen, clothingCatalog, bagState, createdOrder]);
 
   return (
     <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>

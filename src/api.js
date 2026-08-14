@@ -48,3 +48,16 @@ export function addToBag(listingId) {
 export function checkoutQuote() {
   return request("/api/v1/checkout/quote", { method: "POST", body: "{}" });
 }
+
+export function createOrder(deliveryAddress) {
+  return request("/api/v1/checkout/orders", {
+    method: "POST",
+    headers: {
+      "x-idempotency-key": `order-${Date.now()}`,
+    },
+    body: JSON.stringify({
+      deliveryAddress,
+      paymentMethod: "MOMO_PLACEHOLDER",
+    }),
+  });
+}

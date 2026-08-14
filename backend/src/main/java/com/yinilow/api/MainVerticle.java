@@ -10,6 +10,9 @@ import com.yinilow.db.DatabaseConfig;
 import com.yinilow.inventory.HoldManager;
 import com.yinilow.inventory.HoldService;
 import com.yinilow.inventory.PostgresHoldService;
+import com.yinilow.order.MemoryOrderService;
+import com.yinilow.order.OrderManager;
+import com.yinilow.order.PostgresOrderService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.Promise;
@@ -22,6 +25,7 @@ public class MainVerticle extends AbstractVerticle {
   private volatile CatalogReader catalog;
   private volatile HoldManager holds;
   private volatile CartService carts;
+  private volatile OrderManager orders;
   private volatile String dataMode;
 
   @Override
@@ -85,6 +89,12 @@ public class MainVerticle extends AbstractVerticle {
       JsonObject quote = carts.quote();
       ctx.response().setStatusCode(quote.getBoolean("checkoutAllowed") ? 200 : 409).putHeader("content-type", "application/json").end(quote.encode());
     });
+    router.post("/api/v1/checkout/orders").handler(ctx -> {
+      JsonObject body = ctx.body().asJsonObject();
+      String idempotencyKey = ctx.request().getHeader("x-idempotency-key");
+      OrderManager.OrderResult result = orders.createOrder(body == null ? new JsonObject() : body, idempotencyKey);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
 
     int port = config().getInteger("http.port", Integer.parseInt(System.getenv().getOrDefault("PORT", "8080")));
     vertx.createHttpServer()
@@ -98,6 +108,7 @@ public class MainVerticle extends AbstractVerticle {
     catalog = CatalogService.seeded();
     holds = new HoldService();
     carts = new CartService(catalog, holds);
+    orders = new MemoryOrderService(carts);
     dataMode = mode;
   }
 
@@ -113,11 +124,13 @@ public class MainVerticle extends AbstractVerticle {
       new DatabaseBootstrap(database).migrateAndSeed();
       CatalogReader postgresCatalog = new PostgresCatalogService(database);
       HoldManager postgresHolds = new PostgresHoldService(database);
-      return new DataServices(postgresCatalog, postgresHolds, new CartService(postgresCatalog, postgresHolds));
+      CartService postgresCarts = new CartService(postgresCatalog, postgresHolds);
+      return new DataServices(postgresCatalog, postgresHolds, postgresCarts, new PostgresOrderService(database));
     }).onSuccess(services -> {
       catalog = services.catalog();
       holds = services.holds();
       carts = services.carts();
+      orders = services.orders();
       dataMode = "postgres";
     }).onFailure(error -> {
       error.printStackTrace();
@@ -125,7 +138,7 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  private record DataServices(CatalogReader catalog, HoldManager holds, CartService carts) {
+  private record DataServices(CatalogReader catalog, HoldManager holds, CartService carts, OrderManager orders) {
   }
 
   private static void notFound(io.vertx.ext.web.RoutingContext ctx, String code) {
