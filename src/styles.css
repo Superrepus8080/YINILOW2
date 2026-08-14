@@ -1478,6 +1478,119 @@ button {
   width: 100%;
 }
 
+.seller-inventory {
+  grid-column: 1 / -1;
+  border: 1px solid #ebe5dc;
+  border-radius: 12px;
+  background: #fffdfa;
+  box-shadow: 0 12px 32px rgba(23, 18, 10, .05);
+  padding: 18px;
+}
+
+.seller-inventory-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.seller-inventory-head span {
+  display: block;
+  color: #6a5c48;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.seller-inventory-head h2 {
+  margin: 4px 0 0;
+  font-family: Anton, Impact, "Arial Black", sans-serif;
+  font-size: 30px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.seller-table {
+  display: grid;
+  gap: 10px;
+}
+
+.seller-row {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 120px 120px 92px;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #eee7dd;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+
+.seller-row img {
+  width: 76px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f7f4ef;
+  outline: 1px solid oklch(0 0 0 / .1);
+}
+
+.seller-row h3 {
+  margin: 0 0 5px;
+  font-size: 14px;
+  line-height: 1.15;
+}
+
+.seller-row span,
+.seller-row small {
+  display: block;
+  color: #5f5548;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.seller-row strong {
+  font-size: 13px;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+
+.seller-state {
+  display: grid;
+  gap: 5px;
+}
+
+.seller-state span {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .04em;
+}
+
+.state-public {
+  background: #ecf8ef;
+  color: #0f6b36;
+}
+
+.state-hidden {
+  background: #f4eee6;
+  color: #765a38;
+}
+
+.seller-empty {
+  margin: 0;
+  border: 1px dashed #e6ddd2;
+  border-radius: 10px;
+  color: #675d51;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 18px;
+}
+
 .payment-placeholder {
   margin-top: 18px;
   border: 1px solid #ebe5dc;
@@ -2937,6 +3050,25 @@ button {
 
   .seller-preview {
     position: static;
+  }
+
+  .seller-inventory-head,
+  .seller-row {
+    align-items: start;
+  }
+
+  .seller-inventory-head {
+    flex-direction: column;
+  }
+
+  .seller-row {
+    grid-template-columns: 76px 1fr;
+  }
+
+  .seller-row strong,
+  .seller-state,
+  .seller-row .ghost-btn {
+    grid-column: 2;
   }
 
   .confirmation-shell h1 {

@@ -85,6 +85,12 @@ public class MainVerticle extends AbstractVerticle {
       CatalogAdmin.CreateListingResult result = catalogAdmin.createListing(body == null ? new JsonObject() : body);
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
+    router.get("/api/v1/admin/catalog/listings").handler(ctx -> ctx.json(catalogAdmin.adminListings()));
+    router.patch("/api/v1/admin/catalog/listings/:id/visibility").handler(ctx -> {
+      JsonObject body = ctx.body().asJsonObject();
+      CatalogAdmin.CreateListingResult result = catalogAdmin.updateVisibility(ctx.pathParam("id"), body == null ? new JsonObject() : body);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
 
     router.get("/api/v1/cart").handler(ctx -> ctx.json(carts.getActiveCart()));
     router.post("/api/v1/cart/items").handler(ctx -> {

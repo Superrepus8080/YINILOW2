@@ -58,7 +58,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, confirmSandboxPayment, createAdminListing, createOrder, getCart, getListings, initializePayment } from "./api";
+import { addToBag, checkoutQuote, confirmSandboxPayment, createAdminListing, createOrder, getAdminListings, getCart, getListings, initializePayment, updateAdminListingVisibility } from "./api";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -598,9 +598,40 @@ function SellerConsolePage({ onCreated, refreshListings }) {
   });
   const [status, setStatus] = useState("idle");
   const [created, setCreated] = useState(null);
+  const [inventory, setInventory] = useState([]);
+  const [inventoryStatus, setInventoryStatus] = useState("loading");
+  const [updatingListing, setUpdatingListing] = useState(null);
+
+  const loadInventory = async () => {
+    setInventoryStatus("loading");
+    try {
+      const listings = await getAdminListings();
+      setInventory(listings);
+      setInventoryStatus("ready");
+      return listings;
+    } catch (error) {
+      setInventoryStatus("error");
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    loadInventory();
+  }, []);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const toggleVisibility = async (listing) => {
+    const nextVisibility = listing.visibility === "PUBLIC" ? "HIDDEN" : "PUBLIC";
+    setUpdatingListing(listing.listingId);
+    try {
+      await updateAdminListingVisibility(listing.listingId, nextVisibility);
+      await Promise.all([loadInventory(), refreshListings()]);
+    } finally {
+      setUpdatingListing(null);
+    }
   };
 
   const submitListing = async (event) => {
@@ -625,6 +656,7 @@ function SellerConsolePage({ onCreated, refreshListings }) {
       });
       setCreated(listing);
       setStatus("saved");
+      await loadInventory();
       const products = await refreshListings();
       const product = products.find((item) => item.listingId === listing.listingId);
       if (product) {
@@ -645,8 +677,8 @@ function SellerConsolePage({ onCreated, refreshListings }) {
       <section className="seller-shell">
         <div className="seller-heading">
           <span>Seller console</span>
-          <h1>Add a live clothing listing</h1>
-          <p>Create fresh stock for the public storefront, checkout, holds, and payment flow.</p>
+          <h1>Manage live clothing stock</h1>
+          <p>Publish fresh pieces, hide unavailable stock, and track what shoppers can reserve.</p>
         </div>
         <form className="seller-form" onSubmit={submitListing}>
           <label>
@@ -729,6 +761,40 @@ function SellerConsolePage({ onCreated, refreshListings }) {
             </button>
           ) : null}
         </aside>
+        <section className="seller-inventory">
+          <div className="seller-inventory-head">
+            <div>
+              <span>Inventory</span>
+              <h2>Current listings</h2>
+            </div>
+            <button className="ghost-btn" onClick={loadInventory}>Refresh</button>
+          </div>
+          {inventoryStatus === "error" ? (
+            <p className="hold-message warning">Inventory could not be loaded.</p>
+          ) : null}
+          <div className="seller-table">
+            {inventory.map((listing) => (
+              <article className="seller-row" key={listing.listingId}>
+                <img src={assetImageByUrl[listing.imageUrl] ?? listing.imageUrl ?? prodTee} alt={listing.title} />
+                <div>
+                  <h3>{listing.title}</h3>
+                  <span>{listing.category} / Size {listing.sizeLabel || "One size"}</span>
+                  <small>{listing.listingId}</small>
+                </div>
+                <strong>{formatMoney(listing.price, listing.currency)}</strong>
+                <div className="seller-state">
+                  <span className={listing.visibility === "PUBLIC" ? "state-public" : "state-hidden"}>{listing.visibility}</span>
+                  <small>{listing.availabilityState}</small>
+                </div>
+                <button className="ghost-btn" onClick={() => toggleVisibility(listing)} disabled={updatingListing === listing.listingId}>
+                  {listing.visibility === "PUBLIC" ? "Hide" : "Show"}
+                </button>
+              </article>
+            ))}
+            {inventoryStatus === "loading" ? <p className="seller-empty">Loading inventory...</p> : null}
+            {inventoryStatus === "ready" && inventory.length === 0 ? <p className="seller-empty">No listings yet.</p> : null}
+          </div>
+        </section>
       </section>
     </>
   );

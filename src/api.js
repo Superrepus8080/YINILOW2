@@ -34,6 +34,17 @@ export function createAdminListing(listing) {
   });
 }
 
+export function getAdminListings() {
+  return request("/api/v1/admin/catalog/listings");
+}
+
+export function updateAdminListingVisibility(listingId, visibility) {
+  return request(`/api/v1/admin/catalog/listings/${listingId}/visibility`, {
+    method: "PATCH",
+    body: JSON.stringify({ visibility }),
+  });
+}
+
 export function getCart() {
   return request("/api/v1/cart");
 }

@@ -1,6 +1,7 @@
 package com.yinilow.catalog;
 
 import com.yinilow.db.Database;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -14,6 +15,74 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
 
   public PostgresCatalogAdmin(Database database) {
     this.database = database;
+  }
+
+  @Override
+  public JsonArray adminListings() {
+    String sql = """
+      SELECT
+        listing.public_code,
+        listing.title,
+        listing.public_price,
+        listing.currency,
+        listing.visibility,
+        listing.published_at,
+        category.name AS category,
+        unit.unit_code,
+        unit.status AS item_status,
+        unit.size_label,
+        unit.condition_public,
+        listing_unit.status AS listing_unit_status,
+        COALESCE(media.url, '/assets/prod-tee.jpg') AS image_url,
+        EXISTS (
+          SELECT 1
+          FROM inventory.inventory_holds hold
+          WHERE hold.item_unit_id = unit.id
+            AND hold.status = 'ACTIVE'
+            AND hold.expires_at > now()
+        ) AS has_active_hold
+      FROM catalog.product_listings listing
+      JOIN catalog.categories category ON category.id = listing.category_id
+      JOIN catalog.listing_units listing_unit ON listing_unit.listing_id = listing.id
+      JOIN catalog.item_units unit ON unit.id = listing_unit.item_unit_id
+      LEFT JOIN LATERAL (
+        SELECT url
+        FROM catalog.item_media
+        WHERE item_unit_id = unit.id AND approved = true
+        ORDER BY purpose = 'PRIMARY' DESC, created_at ASC
+        LIMIT 1
+      ) media ON true
+      ORDER BY listing.created_at DESC
+      """;
+
+    try (Connection connection = database.connection();
+         var statement = connection.prepareStatement(sql);
+         ResultSet rows = statement.executeQuery()) {
+      JsonArray listings = new JsonArray();
+      while (rows.next()) {
+        String itemStatus = rows.getString("item_status");
+        boolean publicAndListed = "PUBLIC".equals(rows.getString("visibility")) && "LISTED".equals(itemStatus);
+        listings.add(new JsonObject()
+          .put("listingId", rows.getString("public_code"))
+          .put("title", rows.getString("title"))
+          .put("category", rows.getString("category"))
+          .put("price", rows.getBigDecimal("public_price"))
+          .put("currency", rows.getString("currency"))
+          .put("visibility", rows.getString("visibility"))
+          .put("itemUnitId", rows.getString("unit_code"))
+          .put("itemStatus", itemStatus)
+          .put("listingUnitStatus", rows.getString("listing_unit_status"))
+          .put("sizeLabel", rows.getString("size_label"))
+          .put("conditionPublic", rows.getString("condition_public"))
+          .put("imageUrl", rows.getString("image_url"))
+          .put("hasActiveHold", rows.getBoolean("has_active_hold"))
+          .put("availabilityState", publicAndListed && !rows.getBoolean("has_active_hold") ? "AVAILABLE" : "UNAVAILABLE")
+          .put("publishedAt", rows.getString("published_at")));
+      }
+      return listings;
+    } catch (SQLException exception) {
+      throw new IllegalStateException("Could not load admin listings", exception);
+    }
   }
 
   @Override
@@ -49,6 +118,37 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
         .put("availabilityState", "AVAILABLE"));
     } catch (SQLException exception) {
       throw new IllegalStateException("Could not create catalog listing", exception);
+    }
+  }
+
+  @Override
+  public CreateListingResult updateVisibility(String listingId, JsonObject request) {
+    String visibility = clean(request.getString("visibility", "PUBLIC")).toUpperCase(Locale.ROOT);
+    if (!visibility.equals("PUBLIC") && !visibility.equals("HIDDEN")) {
+      return CreateListingResult.failure(400, "VISIBILITY_NOT_ALLOWED");
+    }
+
+    try (Connection connection = database.connection();
+         var statement = connection.prepareStatement("""
+           UPDATE catalog.product_listings
+           SET visibility = ?, published_at = CASE WHEN ? = 'PUBLIC' THEN COALESCE(published_at, now()) ELSE published_at END, updated_at = now()
+           WHERE public_code = ?
+           RETURNING public_code, title, visibility
+           """)) {
+      statement.setString(1, visibility);
+      statement.setString(2, visibility);
+      statement.setString(3, listingId);
+      try (ResultSet row = statement.executeQuery()) {
+        if (!row.next()) {
+          return CreateListingResult.failure(404, "LISTING_NOT_FOUND");
+        }
+        return CreateListingResult.created(new JsonObject()
+          .put("listingId", row.getString("public_code"))
+          .put("title", row.getString("title"))
+          .put("visibility", row.getString("visibility")));
+      }
+    } catch (SQLException exception) {
+      throw new IllegalStateException("Could not update listing visibility", exception);
     }
   }
 
