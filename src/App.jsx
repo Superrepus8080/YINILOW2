@@ -414,7 +414,7 @@ function ToastNotice({ toast, onClose }) {
 
 function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
   const canAdd = Boolean(onAddToBag && product.listingId);
-  const actionLabel = state === "adding" ? "Adding" : state === "added" ? "Added" : state === "failed" ? "Retry" : "Add";
+  const actionLabel = state === "adding" ? "Adding..." : state === "added" ? "Added" : state === "failed" ? "Try again" : "Add";
 
   function handleAdd(event) {
     event.stopPropagation();
@@ -455,8 +455,7 @@ function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
           disabled={state === "adding" || state === "added"}
           onClick={handleAdd}
         >
-          <ShoppingCart size={14} />
-          <span>{actionLabel}</span>
+          {actionLabel}
         </button>
       ) : null}
     </article>

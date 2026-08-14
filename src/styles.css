@@ -542,17 +542,17 @@ button {
 
 .product-grid {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .clothing-grid {
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(6, 1fr);
 }
 
 .product-card {
   position: relative;
   min-width: 0;
-  min-height: 130px;
+  min-height: 206px;
   cursor: pointer;
   outline: none;
 }
@@ -564,7 +564,7 @@ button {
 }
 
 .product-image {
-  height: 92px;
+  height: 142px;
   border: 1px solid #ece7df;
   border-radius: 8px;
   background: #f8f7f5;
@@ -574,8 +574,8 @@ button {
 }
 
 .product-image img {
-  width: 88%;
-  height: 88%;
+  width: 90%;
+  height: 90%;
   object-fit: contain;
   filter: drop-shadow(0 7px 8px rgba(0, 0, 0, .1));
 }
@@ -585,12 +585,12 @@ button {
   align-items: start;
   justify-content: space-between;
   gap: 8px;
-  padding: 7px 7px 0;
+  padding: 9px 8px 0;
 }
 
 .product-meta h3 {
   margin: 0 0 2px;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.12;
   font-weight: 850;
   display: -webkit-box;
@@ -601,7 +601,7 @@ button {
 
 .product-meta strong {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 950;
   font-variant-numeric: tabular-nums;
 }
@@ -619,26 +619,26 @@ button {
 
 .card-add-btn {
   position: absolute;
+  left: 8px;
   right: 8px;
-  top: 58px;
-  width: 26px;
-  height: 26px;
+  top: 104px;
+  width: auto;
+  height: 32px;
   margin: 0;
-  border: 1px solid #d9d2c8;
-  border-radius: 999px;
-  background: rgba(255, 253, 248, .94);
-  color: #111;
+  border: 1px solid #15110b;
+  border-radius: 6px;
+  background: #15110b;
+  color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 950;
   opacity: 0;
   transform: translateY(5px);
-  transition: opacity .16s ease, transform .16s ease, width .16s ease;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, .12);
-}
-
-.card-add-btn span {
-  display: none;
+  transition: opacity .16s ease, transform .16s ease;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .18);
 }
 
 .product-card:hover .card-add-btn,
@@ -651,33 +651,16 @@ button {
 
 .card-add-btn.adding {
   cursor: progress;
-  width: 72px;
-  border-radius: 6px;
-  background: #15110b;
-  color: #fff;
-}
-
-.card-add-btn.adding span,
-.card-add-btn.added span,
-.card-add-btn.failed span {
-  display: inline;
-  margin-left: 5px;
-  text-transform: uppercase;
-  font-size: 9px;
-  font-weight: 950;
+  background: #3b352c;
 }
 
 .card-add-btn.added {
-  width: 68px;
-  border-radius: 6px;
   border-color: #d5ebcc;
   background: #effae9;
   color: #174f24;
 }
 
 .card-add-btn.failed {
-  width: 64px;
-  border-radius: 6px;
   border-color: #f1c6b9;
   background: #fff1eb;
   color: #9b261c;
@@ -856,7 +839,11 @@ button {
 }
 
 .rail-products .product-image {
-  height: 92px;
+  height: 132px;
+}
+
+.rail-products .card-add-btn {
+  top: 94px;
 }
 
 .rail-next {
@@ -981,12 +968,16 @@ button {
 
 .browse-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
 .browse-grid .product-image {
-  height: 138px;
+  height: 162px;
+}
+
+.browse-grid .card-add-btn {
+  top: 124px;
 }
 
 .detail-shell {
