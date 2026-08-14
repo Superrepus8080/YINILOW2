@@ -71,6 +71,20 @@ public class DatabaseBootstrap {
         CONSTRAINT seller_accounts_status_check CHECK (status IN ('ACTIVE', 'SUSPENDED'))
       );
 
+      CREATE TABLE IF NOT EXISTS auth.seller_sessions (
+        token_hash TEXT PRIMARY KEY,
+        seller_account_id UUID NOT NULL REFERENCES auth.seller_accounts(id),
+        expires_at TIMESTAMPTZ NOT NULL,
+        revoked_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_seller_sessions_account
+      ON auth.seller_sessions (seller_account_id);
+
+      CREATE INDEX IF NOT EXISTS idx_seller_sessions_expiry
+      ON auth.seller_sessions (expires_at);
+
       ALTER TABLE catalog.product_listings
       ADD COLUMN IF NOT EXISTS seller_account_id UUID REFERENCES auth.seller_accounts(id);
 

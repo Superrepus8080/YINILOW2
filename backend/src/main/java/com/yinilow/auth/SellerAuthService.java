@@ -48,7 +48,7 @@ public class SellerAuthService {
       statement.setString(3, passwordHash(password));
       try (ResultSet row = statement.executeQuery()) {
         row.next();
-        return AuthResult.success(createSession(row.getString("id"), row.getString("email"), row.getString("display_name")).toJson());
+        return AuthResult.success(createPersistentSession(connection, row.getString("id"), row.getString("email"), row.getString("display_name")).toJson());
       }
     } catch (SQLException exception) {
       if ("23505".equals(exception.getSQLState())) {
@@ -87,7 +87,7 @@ public class SellerAuthService {
         if (!isBcryptHash(storedHash)) {
           upgradePasswordHash(connection, sellerId, password);
         }
-        return AuthResult.success(createSession(row.getString("id"), row.getString("email"), row.getString("display_name")).toJson());
+        return AuthResult.success(createPersistentSession(connection, row.getString("id"), row.getString("email"), row.getString("display_name")).toJson());
       }
     } catch (SQLException exception) {
       throw new IllegalStateException("Could not sign in seller", exception);
@@ -98,11 +98,53 @@ public class SellerAuthService {
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
       return Optional.empty();
     }
-    return Optional.ofNullable(sessions.get(authorizationHeader.substring("Bearer ".length()).trim()));
+    String token = authorizationHeader.substring("Bearer ".length()).trim();
+    if (database == null) {
+      return Optional.ofNullable(sessions.get(token));
+    }
+    try (Connection connection = database.connection();
+         var statement = connection.prepareStatement("""
+           SELECT seller.id::text, seller.email, seller.display_name
+           FROM auth.seller_sessions session
+           JOIN auth.seller_accounts seller ON seller.id = session.seller_account_id
+           WHERE session.token_hash = ?
+             AND session.revoked_at IS NULL
+             AND session.expires_at > now()
+             AND seller.status = 'ACTIVE'
+           LIMIT 1
+           """)) {
+      statement.setString(1, tokenHash(token));
+      try (ResultSet row = statement.executeQuery()) {
+        if (!row.next()) {
+          return Optional.empty();
+        }
+        return Optional.of(new SellerSession(row.getString("id"), row.getString("email"), row.getString("display_name"), token));
+      }
+    } catch (SQLException exception) {
+      throw new IllegalStateException("Could not authenticate seller session", exception);
+    }
   }
 
   public void logout(String authorizationHeader) {
-    authenticate(authorizationHeader).ifPresent(session -> sessions.remove(session.token()));
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      return;
+    }
+    String token = authorizationHeader.substring("Bearer ".length()).trim();
+    sessions.remove(token);
+    if (database == null) {
+      return;
+    }
+    try (Connection connection = database.connection();
+         var statement = connection.prepareStatement("""
+           UPDATE auth.seller_sessions
+           SET revoked_at = now()
+           WHERE token_hash = ? AND revoked_at IS NULL
+           """)) {
+      statement.setString(1, tokenHash(token));
+      statement.executeUpdate();
+    } catch (SQLException exception) {
+      throw new IllegalStateException("Could not end seller session", exception);
+    }
   }
 
   private AuthResult legacyPinLogin(JsonObject request) {
@@ -125,6 +167,19 @@ public class SellerAuthService {
   private SellerSession createSession(String sellerId, String email, String displayName) {
     SellerSession session = new SellerSession(sellerId, email, displayName, token());
     sessions.put(session.token(), session);
+    return session;
+  }
+
+  private SellerSession createPersistentSession(Connection connection, String sellerId, String email, String displayName) throws SQLException {
+    SellerSession session = new SellerSession(sellerId, email, displayName, token());
+    try (var statement = connection.prepareStatement("""
+      INSERT INTO auth.seller_sessions (token_hash, seller_account_id, expires_at)
+      VALUES (?, ?::uuid, now() + interval '30 days')
+      """)) {
+      statement.setString(1, tokenHash(session.token()));
+      statement.setString(2, sellerId);
+      statement.executeUpdate();
+    }
     return session;
   }
 
@@ -180,6 +235,14 @@ public class SellerAuthService {
   }
 
   private static String legacySha256(String value) {
+    return sha256Base64(value);
+  }
+
+  private static String tokenHash(String value) {
+    return sha256Base64(value);
+  }
+
+  private static String sha256Base64(String value) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
       byte[] hashed = digest.digest(value.getBytes(StandardCharsets.UTF_8));
