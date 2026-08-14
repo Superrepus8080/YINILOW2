@@ -2,6 +2,7 @@ package com.yinilow.auth;
 
 import com.yinilow.db.Database;
 import io.vertx.core.json.JsonObject;
+import org.mindrot.jbcrypt.BCrypt;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -44,7 +45,7 @@ public class SellerAuthService {
            """)) {
       statement.setString(1, email);
       statement.setString(2, displayName);
-      statement.setString(3, hash(password));
+      statement.setString(3, passwordHash(password));
       try (ResultSet row = statement.executeQuery()) {
         row.next();
         return AuthResult.success(createSession(row.getString("id"), row.getString("email"), row.getString("display_name")).toJson());
@@ -75,8 +76,16 @@ public class SellerAuthService {
            """)) {
       statement.setString(1, email);
       try (ResultSet row = statement.executeQuery()) {
-        if (!row.next() || !hash(password).equals(row.getString("password_hash"))) {
+        if (!row.next()) {
           return AuthResult.failure(401, "INVALID_SELLER_LOGIN");
+        }
+        String sellerId = row.getString("id");
+        String storedHash = row.getString("password_hash");
+        if (!passwordMatches(password, storedHash)) {
+          return AuthResult.failure(401, "INVALID_SELLER_LOGIN");
+        }
+        if (!isBcryptHash(storedHash)) {
+          upgradePasswordHash(connection, sellerId, password);
         }
         return AuthResult.success(createSession(row.getString("id"), row.getString("email"), row.getString("display_name")).toJson());
       }
@@ -128,8 +137,9 @@ public class SellerAuthService {
            SET password_hash = EXCLUDED.password_hash,
              updated_at = now()
            WHERE auth.seller_accounts.password_hash = ''
+             OR auth.seller_accounts.password_hash NOT LIKE '$2%'
            """)) {
-      statement.setString(1, hash(demoPin));
+      statement.setString(1, passwordHash(demoPin));
       statement.executeUpdate();
     } catch (SQLException exception) {
       throw new IllegalStateException("Could not seed demo seller", exception);
@@ -142,7 +152,34 @@ public class SellerAuthService {
     return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
   }
 
-  private static String hash(String value) {
+  private static String passwordHash(String value) {
+    return BCrypt.hashpw(value, BCrypt.gensalt(12));
+  }
+
+  private static boolean passwordMatches(String password, String storedHash) {
+    if (isBcryptHash(storedHash)) {
+      return BCrypt.checkpw(password, storedHash);
+    }
+    return legacySha256(password).equals(storedHash);
+  }
+
+  private static boolean isBcryptHash(String value) {
+    return value != null && value.startsWith("$2");
+  }
+
+  private static void upgradePasswordHash(Connection connection, String sellerId, String password) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+      UPDATE auth.seller_accounts
+      SET password_hash = ?, updated_at = now()
+      WHERE id = ?::uuid
+      """)) {
+      statement.setString(1, passwordHash(password));
+      statement.setString(2, sellerId);
+      statement.executeUpdate();
+    }
+  }
+
+  private static String legacySha256(String value) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
       byte[] hashed = digest.digest(value.getBytes(StandardCharsets.UTF_8));

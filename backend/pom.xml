@@ -49,6 +49,11 @@
       <version>42.7.7</version>
     </dependency>
     <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+      <version>0.4</version>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
       <scope>test</scope>
