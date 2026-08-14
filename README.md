@@ -55,7 +55,9 @@ npm run preview
 - Frontend: React + Vite
 - Backend: Vert.x
 - Database: PostgreSQL
-- Realtime: WebSockets for live drops, cart/grab updates, saved items, and inventory availability
+- Realtime: WebSocket signaling plus WebRTC DataChannel for safe telemetry and live feel; trusted business writes stay on Vert.x APIs and PostgreSQL records
+
+See `docs/REALTIME_DATACHANNEL_ARCHITECTURE.md` for the DataChannel safety rules and implementation shape.
 
 Backend checks:
 

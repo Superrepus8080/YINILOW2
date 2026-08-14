@@ -20,6 +20,7 @@ import com.yinilow.order.PostgresOrderService;
 import com.yinilow.payment.MemoryPaymentService;
 import com.yinilow.payment.PaymentManager;
 import com.yinilow.payment.PostgresPaymentService;
+import com.yinilow.realtime.RealtimeSignalingHub;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.Promise;
@@ -37,6 +38,7 @@ public class MainVerticle extends AbstractVerticle {
   private volatile OrderManager orders;
   private volatile PaymentManager payments;
   private final SellerAuthService sellerAuth = new SellerAuthService();
+  private final RealtimeSignalingHub realtime = new RealtimeSignalingHub();
   private volatile String dataMode;
 
   @Override
@@ -58,6 +60,7 @@ public class MainVerticle extends AbstractVerticle {
       .allowedHeader("authorization")
       .allowedHeader("content-type")
       .allowedHeader("x-idempotency-key"));
+    router.get("/api/v1/realtime/signaling/:roomId").handler(realtime::handle);
     router.route().handler(BodyHandler.create());
 
     router.get("/health").handler(ctx -> ctx.json(new JsonObject()
@@ -68,7 +71,9 @@ public class MainVerticle extends AbstractVerticle {
     router.get("/api/v1/config/feature-flags").handler(ctx -> ctx.json(new JsonObject()
       .put("digPile.enabled", true)
       .put("digPile.live.enabled", false)
-      .put("digPile.webrtc.enabled", false)
+      .put("digPile.webrtc.enabled", true)
+      .put("realtime.signaling.enabled", true)
+      .put("realtime.dataChannel.telemetry.enabled", true)
       .put("luckyPull.enabled", false)
       .put("savedPile.enabled", true)
       .put("grab.enabled", false)
