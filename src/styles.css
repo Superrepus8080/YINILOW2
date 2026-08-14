@@ -1477,6 +1477,23 @@ button {
   grid-column: 1 / -1;
 }
 
+.seller-upload {
+  display: grid;
+  gap: 8px;
+  border: 1px dashed #d9cdbc;
+  border-radius: 10px;
+  background: #fff8e6;
+  padding: 14px;
+}
+
+.seller-upload span {
+  color: #6b5d49;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .seller-form input,
 .seller-form textarea,
 .seller-form select,

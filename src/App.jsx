@@ -600,6 +600,7 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     colorLabel: "Blue",
     conditionPublic: "VERY_GOOD",
     imageUrl: "/assets/prod-leather.jpg",
+    imageFileName: "",
     description: "Inspected seller item ready for YINILOW checkout.",
     chest: "54",
     length: "68",
@@ -644,6 +645,30 @@ function SellerConsolePage({ onCreated, refreshListings }) {
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const uploadProductImage = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setStatus("image-error");
+      return;
+    }
+    if (file.size > 1_500_000) {
+      setStatus("image-large");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((current) => ({
+        ...current,
+        imageUrl: String(reader.result),
+        imageFileName: file.name,
+      }));
+      setStatus("image-ready");
+    };
+    reader.onerror = () => setStatus("image-error");
+    reader.readAsDataURL(file);
   };
 
   const updateAuthField = (field) => (event) => {
@@ -795,8 +820,15 @@ function SellerConsolePage({ onCreated, refreshListings }) {
               <option value="FAIR">Fair</option>
             </select>
           </label>
+          <div className="seller-upload wide">
+            <label>
+              Product photo
+              <input type="file" accept="image/*" onChange={uploadProductImage} />
+            </label>
+            <span>{form.imageFileName || "Upload a JPG, PNG, or WebP up to 1.5 MB."}</span>
+          </div>
           <label className="wide">
-            Image path or URL
+            Image URL or stored photo data
             <input value={form.imageUrl} onChange={updateField("imageUrl")} placeholder="/assets/prod-tee.jpg" />
           </label>
           <label className="wide">
@@ -813,9 +845,12 @@ function SellerConsolePage({ onCreated, refreshListings }) {
           </label>
           <div className="seller-actions wide">
             <button className="dark-btn" disabled={status === "saving"}>
-              {status === "saving" ? "Publishing..." : "Publish listing"} <ArrowRight size={17} />
+            {status === "saving" ? "Publishing..." : "Publish listing"} <ArrowRight size={17} />
             </button>
             {status === "saved" ? <span>Listing is live.</span> : null}
+            {status === "image-ready" ? <span>Photo ready.</span> : null}
+            {status === "image-large" ? <span className="warning">Photo must be 1.5 MB or smaller.</span> : null}
+            {status === "image-error" ? <span className="warning">Photo could not be read.</span> : null}
             {status === "error" ? <span className="warning">Listing could not be saved.</span> : null}
           </div>
         </form>
