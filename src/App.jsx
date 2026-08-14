@@ -212,7 +212,7 @@ function Header({ active, setActive, cartCount = 0, onCart, onSeller }) {
   );
 }
 
-function ClothingPage({ onBrowse, onOpenProduct, products }) {
+function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, products }) {
   return (
     <>
       <CategoryNav
@@ -259,7 +259,14 @@ function ClothingPage({ onBrowse, onOpenProduct, products }) {
       <SectionTitle title="Featured products" onAction={() => onBrowse("All Categories")} />
       <div className="product-grid clothing-grid">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} fashion onOpen={onOpenProduct} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            fashion
+            onAddToBag={onAddToBag}
+            onOpen={onOpenProduct}
+            state={cardStates[product.listingId] ?? "idle"}
+          />
         ))}
       </div>
       <TrustBar
@@ -393,7 +400,27 @@ function SectionTitle({ title, onAction }) {
   );
 }
 
-function ProductCard({ product, fashion, onOpen }) {
+function ToastNotice({ toast, onClose }) {
+  return (
+    <aside className={`toast-notice ${toast.type}`} role="status" aria-live="polite">
+      <div>
+        <strong>{toast.title}</strong>
+        <span>{toast.message}</span>
+      </div>
+      <button aria-label="Close notice" onClick={onClose}>Close</button>
+    </aside>
+  );
+}
+
+function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
+  const canAdd = Boolean(onAddToBag && product.listingId);
+  const actionLabel = state === "adding" ? "Adding..." : state === "added" ? "Added" : state === "failed" ? "Try again" : "Add";
+
+  function handleAdd(event) {
+    event.stopPropagation();
+    onAddToBag?.(product);
+  }
+
   return (
     <article
       className="product-card"
@@ -421,6 +448,15 @@ function ProductCard({ product, fashion, onOpen }) {
           <button aria-label={`Save ${product.name}`} onClick={(event) => event.stopPropagation()}><Heart size={20} /></button>
         ) : null}
       </div>
+      {canAdd ? (
+        <button
+          className={`card-add-btn ${state}`}
+          disabled={state === "adding" || state === "added"}
+          onClick={handleAdd}
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </article>
   );
 }
@@ -459,13 +495,19 @@ function SmallPromise({ icon: Icon, title, text }) {
   );
 }
 
-function ProductRail({ title, products, onOpenProduct, onViewAll }) {
+function ProductRail({ title, products, onAddToBag, onOpenProduct, onViewAll, cardStates = {} }) {
   return (
     <section className="product-rail">
       <SectionTitle title={title} onAction={onViewAll} />
       <div className="rail-products">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} onOpen={onOpenProduct} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            onAddToBag={onAddToBag}
+            onOpen={onOpenProduct}
+            state={cardStates[product.listingId] ?? "idle"}
+          />
         ))}
       </div>
       <button className="rail-next" aria-label={`Next ${title}`}>
@@ -475,7 +517,7 @@ function ProductRail({ title, products, onOpenProduct, onViewAll }) {
   );
 }
 
-function BrowsePage({ active, category, onBrowse, onOpenProduct, clothingCatalog }) {
+function BrowsePage({ active, cardStates, category, onAddToBag, onBrowse, onOpenProduct, clothingCatalog }) {
   const isHome = active === "home";
   const products = isHome ? allHomeProducts : clothingCatalog;
   const filtered = category && !["All Categories", "Categories", "Top Picks", "Home"].includes(category)
@@ -514,7 +556,14 @@ function BrowsePage({ active, category, onBrowse, onOpenProduct, clothingCatalog
           </div>
           <div className="browse-grid">
             {filtered.map((product) => (
-              <ProductCard key={product.id} product={product} fashion={!isHome} onOpen={onOpenProduct} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                fashion={!isHome}
+                onAddToBag={!isHome ? onAddToBag : undefined}
+                onOpen={onOpenProduct}
+                state={cardStates[product.listingId] ?? "idle"}
+              />
             ))}
           </div>
         </div>
@@ -523,8 +572,9 @@ function BrowsePage({ active, category, onBrowse, onOpenProduct, clothingCatalog
   );
 }
 
-function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, clothingCatalog, onAddToBag, bagState }) {
+function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenProduct, clothingCatalog, onAddToBag, bagState }) {
   const isHome = active === "home";
+  const canAdd = active === "clothing" && Boolean(product.listingId);
   const related = (isHome ? allHomeProducts : clothingCatalog).filter((item) => item.id !== product.id).slice(0, 4);
 
   return (
@@ -555,7 +605,7 @@ function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, cloth
           ) : null}
           <div className="detail-actions">
             <button className="dark-btn" disabled={bagState === "adding"} onClick={() => onAddToBag(product)}>
-              {bagState === "adding" ? "Holding..." : "Add to bag"} <ArrowRight size={18} />
+              {bagState === "adding" ? "Holding..." : canAdd ? "Add to bag" : "Preview only"} <ArrowRight size={18} />
             </button>
             <button className="ghost-btn"><Heart size={18} /> Save</button>
           </div>
@@ -577,7 +627,14 @@ function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, cloth
         <SectionTitle title={isHome ? "Related picks" : "More from the pile"} onAction={() => onBrowse("All Categories")} />
         <div className="browse-grid compact-related">
           {related.map((item) => (
-            <ProductCard key={item.id} product={item} fashion={!isHome} onOpen={onOpenProduct} />
+            <ProductCard
+              key={item.id}
+              product={item}
+              fashion={!isHome}
+              onAddToBag={!isHome ? onAddToBag : undefined}
+              onOpen={onOpenProduct}
+              state={cardStates[item.listingId] ?? "idle"}
+            />
           ))}
         </div>
       </section>
@@ -1767,7 +1824,9 @@ export function App() {
   const [apiStatus, setApiStatus] = useState("fallback");
   const [cartCount, setCartCount] = useState(0);
   const [bagState, setBagState] = useState("idle");
+  const [cardStates, setCardStates] = useState({});
   const [createdOrder, setCreatedOrder] = useState(null);
+  const [toast, setToast] = useState(null);
   const clothingCatalog = apiProducts.length ? apiProducts : clothingProducts;
 
   const refreshListings = async () => {
@@ -1805,6 +1864,12 @@ export function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timer = window.setTimeout(() => setToast(null), 3600);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   const switchWorld = (world) => {
     setActive(world);
@@ -1856,25 +1921,40 @@ export function App() {
   };
   const holdProduct = async (product) => {
     if (active !== "clothing" || !product.listingId) {
-      setBagState("held");
+      setBagState("idle");
+      setToast({ type: "warning", title: "Preview only", message: "This item is not connected to live checkout yet." });
       return;
     }
+    const cardKey = product.listingId;
     setBagState("adding");
+    setCardStates((states) => ({ ...states, [cardKey]: "adding" }));
     try {
       await addToBag(product.listingId);
       const cart = await getCart().catch(() => null);
-      setCartCount(cart?.items?.length ?? cartCount + 1);
+      setCartCount((count) => cart?.items?.length ?? count + 1);
       setBagState("held");
+      setCardStates((states) => ({ ...states, [cardKey]: "added" }));
+      setToast({ type: "success", title: "Added to bag", message: `${product.name} is held for 10 minutes.` });
     } catch (error) {
-      setBagState(error.status === 409 ? "conflict" : "idle");
+      const conflict = error.status === 409;
+      setBagState(conflict ? "conflict" : "idle");
+      setCardStates((states) => ({ ...states, [cardKey]: "failed" }));
+      setToast({
+        type: "warning",
+        title: conflict ? "Already held" : "Could not add",
+        message: conflict ? "Someone already has this item in their bag." : "Please try again in a moment.",
+      });
+      window.setTimeout(() => {
+        setCardStates((states) => (states[cardKey] === "failed" ? { ...states, [cardKey]: "idle" } : states));
+      }, 2800);
     }
   };
   const page = useMemo(() => {
     if (screen.type === "browse") {
-      return <BrowsePage active={active} category={screen.category} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
+      return <BrowsePage active={active} cardStates={cardStates} category={screen.category} onAddToBag={holdProduct} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
     }
     if (screen.type === "product" && screen.product) {
-      return <ProductDetail active={active} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} bagState={bagState} />;
+      return <ProductDetail active={active} cardStates={cardStates} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} bagState={bagState} />;
     }
     if (screen.type === "cart") {
       return <CartPage onBrowse={browse} onOpenProduct={openProduct} onCheckout={openCheckout} refreshCartCount={setCartCount} />;
@@ -1899,8 +1979,8 @@ export function App() {
     }
     return active === "home"
       ? <HomePage onBrowse={browse} onOpenProduct={openProduct} />
-      : <ClothingPage onBrowse={browse} onOpenProduct={openProduct} products={clothingCatalog} />;
-  }, [active, screen, clothingCatalog, bagState, createdOrder]);
+      : <ClothingPage cardStates={cardStates} onAddToBag={holdProduct} onBrowse={browse} onOpenProduct={openProduct} products={clothingCatalog} />;
+  }, [active, screen, clothingCatalog, bagState, createdOrder, cardStates]);
 
   return (
     <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>
@@ -1910,6 +1990,7 @@ export function App() {
           {apiStatus === "connected" ? "Live catalog connected" : "Prototype catalog fallback"}
         </div>
       ) : null}
+      {toast ? <ToastNotice toast={toast} onClose={() => setToast(null)} /> : null}
       {page}
       <Footer active={active} />
     </main>
