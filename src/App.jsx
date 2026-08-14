@@ -713,6 +713,13 @@ function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenPr
               {product.sizeLabel ? <span>Size {product.sizeLabel}</span> : null}
             </div>
           ) : null}
+          {!isHome ? (
+            <div className="detail-promise-row">
+              <span><Clock3 size={16} /> 10 min hold</span>
+              <span><ShieldCheck size={16} /> Seller checked</span>
+              <span><Truck size={16} /> Ghana delivery</span>
+            </div>
+          ) : null}
           <div className="detail-actions">
             <button className="dark-btn" disabled={bagState === "adding" || bagState === "held"} onClick={() => onAddToBag(product)}>
               {bagState === "adding" ? "Holding..." : bagState === "held" ? "Added" : canAdd ? "Add to bag" : "Preview only"} <ArrowRight size={18} />
