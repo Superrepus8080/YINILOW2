@@ -1388,7 +1388,8 @@ button {
 }
 
 .seller-form,
-.seller-preview {
+.seller-preview,
+.seller-login {
   border: 1px solid #ebe5dc;
   border-radius: 12px;
   background: #fffdfa;
@@ -1402,7 +1403,40 @@ button {
   gap: 14px;
 }
 
-.seller-form label {
+.seller-login {
+  grid-column: 1 / -1;
+  max-width: 560px;
+  display: grid;
+  gap: 16px;
+}
+
+.seller-login span {
+  display: block;
+  color: #6a5c48;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.seller-login h2 {
+  margin: 6px 0 6px;
+  font-family: Anton, Impact, "Arial Black", sans-serif;
+  font-size: 38px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.seller-login p {
+  margin: 0;
+  color: #504941;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.seller-form label,
+.seller-login label {
   display: grid;
   gap: 8px;
   color: #2f2a23;
@@ -1418,7 +1452,8 @@ button {
 
 .seller-form input,
 .seller-form textarea,
-.seller-form select {
+.seller-form select,
+.seller-login input {
   width: 100%;
   border: 1px solid #e3dcd2;
   border-radius: 8px;
@@ -1433,7 +1468,8 @@ button {
 }
 
 .seller-form input,
-.seller-form select {
+.seller-form select,
+.seller-login input {
   height: 43px;
 }
 
@@ -1445,7 +1481,8 @@ button {
 
 .seller-form input:focus,
 .seller-form textarea:focus,
-.seller-form select:focus {
+.seller-form select:focus,
+.seller-login input:focus {
   border-color: #ffd000;
   box-shadow: 0 0 0 3px rgba(255, 208, 0, .16);
 }

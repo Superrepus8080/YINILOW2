@@ -58,7 +58,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, confirmSandboxPayment, createAdminListing, createOrder, getAdminListings, getCart, getListings, initializePayment, updateAdminListingVisibility } from "./api";
+import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, getAdminListings, getCart, getListings, getStoredSellerSession, initializePayment, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -584,6 +584,9 @@ function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, cloth
 }
 
 function SellerConsolePage({ onCreated, refreshListings }) {
+  const [sellerSession, setSellerSession] = useState(() => getStoredSellerSession());
+  const [pin, setPin] = useState("");
+  const [loginStatus, setLoginStatus] = useState("idle");
   const [form, setForm] = useState({
     title: "Fresh Y2K denim jacket",
     category: "New Drop",
@@ -603,6 +606,10 @@ function SellerConsolePage({ onCreated, refreshListings }) {
   const [updatingListing, setUpdatingListing] = useState(null);
 
   const loadInventory = async () => {
+    if (!getStoredSellerSession()) {
+      setInventoryStatus("locked");
+      return [];
+    }
     setInventoryStatus("loading");
     try {
       const listings = await getAdminListings();
@@ -610,14 +617,25 @@ function SellerConsolePage({ onCreated, refreshListings }) {
       setInventoryStatus("ready");
       return listings;
     } catch (error) {
+      if (error.status === 401) {
+        clearSellerSession();
+        setSellerSession(null);
+        setInventory([]);
+        setInventoryStatus("locked");
+        return [];
+      }
       setInventoryStatus("error");
       return [];
     }
   };
 
   useEffect(() => {
-    loadInventory();
-  }, []);
+    if (sellerSession) {
+      loadInventory();
+    } else {
+      setInventoryStatus("locked");
+    }
+  }, [sellerSession]);
 
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -632,6 +650,26 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     } finally {
       setUpdatingListing(null);
     }
+  };
+
+  const submitLogin = async (event) => {
+    event.preventDefault();
+    setLoginStatus("checking");
+    try {
+      const session = await sellerLogin(pin);
+      setSellerSession(session);
+      setLoginStatus("idle");
+      setPin("");
+    } catch (error) {
+      setLoginStatus("error");
+    }
+  };
+
+  const logoutSeller = async () => {
+    await sellerLogout();
+    setSellerSession(null);
+    setInventory([]);
+    setInventoryStatus("locked");
   };
 
   const submitListing = async (event) => {
@@ -678,8 +716,27 @@ function SellerConsolePage({ onCreated, refreshListings }) {
         <div className="seller-heading">
           <span>Seller console</span>
           <h1>Manage live clothing stock</h1>
-          <p>Publish fresh pieces, hide unavailable stock, and track what shoppers can reserve.</p>
+          <p>{sellerSession ? `Signed in as ${sellerSession.displayName}` : "Enter the seller access PIN to publish and manage stock."}</p>
+          {sellerSession ? <button className="ghost-btn" onClick={logoutSeller}>Sign out</button> : null}
         </div>
+        {!sellerSession ? (
+          <form className="seller-login" onSubmit={submitLogin}>
+            <div>
+              <span>Protected access</span>
+              <h2>Seller sign in</h2>
+              <p>This keeps product publishing and inventory controls away from public shoppers.</p>
+            </div>
+            <label>
+              Seller PIN
+              <input value={pin} onChange={(event) => setPin(event.target.value)} type="password" placeholder="Enter seller PIN" />
+            </label>
+            <button className="dark-btn" disabled={loginStatus === "checking"}>
+              {loginStatus === "checking" ? "Checking..." : "Enter console"} <ArrowRight size={17} />
+            </button>
+            {loginStatus === "error" ? <p className="hold-message warning">That PIN did not work.</p> : null}
+          </form>
+        ) : (
+          <>
         <form className="seller-form" onSubmit={submitListing}>
           <label>
             Product title
@@ -795,6 +852,8 @@ function SellerConsolePage({ onCreated, refreshListings }) {
             {inventoryStatus === "ready" && inventory.length === 0 ? <p className="seller-empty">No listings yet.</p> : null}
           </div>
         </section>
+          </>
+        )}
       </section>
     </>
   );

@@ -1,5 +1,6 @@
 package com.yinilow.api;
 
+import com.yinilow.auth.SellerAuthService;
 import com.yinilow.catalog.CatalogAdmin;
 import com.yinilow.catalog.CatalogReader;
 import com.yinilow.catalog.CatalogService;
@@ -34,6 +35,7 @@ public class MainVerticle extends AbstractVerticle {
   private volatile CartService carts;
   private volatile OrderManager orders;
   private volatile PaymentManager payments;
+  private final SellerAuthService sellerAuth = new SellerAuthService();
   private volatile String dataMode;
 
   @Override
@@ -52,6 +54,7 @@ public class MainVerticle extends AbstractVerticle {
       .allowedMethod(HttpMethod.PATCH)
       .allowedMethod(HttpMethod.DELETE)
       .allowedMethod(HttpMethod.OPTIONS)
+      .allowedHeader("authorization")
       .allowedHeader("content-type")
       .allowedHeader("x-idempotency-key"));
     router.route().handler(BodyHandler.create());
@@ -80,13 +83,36 @@ public class MainVerticle extends AbstractVerticle {
       catalog.publicListingDetail(listingId)
         .ifPresentOrElse(ctx::json, () -> notFound(ctx, "LISTING_NOT_FOUND"));
     });
+    router.post("/api/v1/seller/sessions").handler(ctx -> {
+      JsonObject body = ctx.body().asJsonObject();
+      SellerAuthService.AuthResult result = sellerAuth.login(body == null ? new JsonObject() : body);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
+    router.delete("/api/v1/seller/session").handler(ctx -> {
+      sellerAuth.logout(ctx.request().getHeader("authorization"));
+      ctx.response().setStatusCode(204).end();
+    });
     router.post("/api/v1/admin/catalog/listings").handler(ctx -> {
+      if (!sellerAuth.authenticate(ctx.request().getHeader("authorization")).isPresent()) {
+        unauthorized(ctx);
+        return;
+      }
       JsonObject body = ctx.body().asJsonObject();
       CatalogAdmin.CreateListingResult result = catalogAdmin.createListing(body == null ? new JsonObject() : body);
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
-    router.get("/api/v1/admin/catalog/listings").handler(ctx -> ctx.json(catalogAdmin.adminListings()));
+    router.get("/api/v1/admin/catalog/listings").handler(ctx -> {
+      if (!sellerAuth.authenticate(ctx.request().getHeader("authorization")).isPresent()) {
+        unauthorized(ctx);
+        return;
+      }
+      ctx.json(catalogAdmin.adminListings());
+    });
     router.patch("/api/v1/admin/catalog/listings/:id/visibility").handler(ctx -> {
+      if (!sellerAuth.authenticate(ctx.request().getHeader("authorization")).isPresent()) {
+        unauthorized(ctx);
+        return;
+      }
       JsonObject body = ctx.body().asJsonObject();
       CatalogAdmin.CreateListingResult result = catalogAdmin.updateVisibility(ctx.pathParam("id"), body == null ? new JsonObject() : body);
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
@@ -179,6 +205,12 @@ public class MainVerticle extends AbstractVerticle {
   private static void notFound(io.vertx.ext.web.RoutingContext ctx, String code) {
     ctx.response().setStatusCode(404).putHeader("content-type", "application/json").end(new JsonObject()
       .put("error", code)
+      .encode());
+  }
+
+  private static void unauthorized(io.vertx.ext.web.RoutingContext ctx) {
+    ctx.response().setStatusCode(401).putHeader("content-type", "application/json").end(new JsonObject()
+      .put("error", "SELLER_SESSION_REQUIRED")
       .encode());
   }
 }

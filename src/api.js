@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_YINILOW_API_BASE ?? "";
+const SELLER_SESSION_KEY = "yinilow.sellerSession";
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -30,19 +31,63 @@ export function getListing(listingId) {
 export function createAdminListing(listing) {
   return request("/api/v1/admin/catalog/listings", {
     method: "POST",
+    headers: sellerHeaders(),
     body: JSON.stringify(listing),
   });
 }
 
 export function getAdminListings() {
-  return request("/api/v1/admin/catalog/listings");
+  return request("/api/v1/admin/catalog/listings", { headers: sellerHeaders() });
 }
 
 export function updateAdminListingVisibility(listingId, visibility) {
   return request(`/api/v1/admin/catalog/listings/${listingId}/visibility`, {
     method: "PATCH",
+    headers: sellerHeaders(),
     body: JSON.stringify({ visibility }),
   });
+}
+
+export function getStoredSellerSession() {
+  try {
+    return JSON.parse(window.localStorage.getItem(SELLER_SESSION_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+export function storeSellerSession(session) {
+  window.localStorage.setItem(SELLER_SESSION_KEY, JSON.stringify(session));
+}
+
+export function clearSellerSession() {
+  window.localStorage.removeItem(SELLER_SESSION_KEY);
+}
+
+export async function sellerLogin(pin) {
+  const session = await request("/api/v1/seller/sessions", {
+    method: "POST",
+    body: JSON.stringify({ pin }),
+  });
+  storeSellerSession(session);
+  return session;
+}
+
+export function sellerLogout() {
+  const session = getStoredSellerSession();
+  clearSellerSession();
+  if (!session?.token) {
+    return Promise.resolve();
+  }
+  return request("/api/v1/seller/session", {
+    method: "DELETE",
+    headers: { authorization: `Bearer ${session.token}` },
+  }).catch(() => {});
+}
+
+function sellerHeaders() {
+  const session = getStoredSellerSession();
+  return session?.token ? { authorization: `Bearer ${session.token}` } : {};
 }
 
 export function getCart() {
