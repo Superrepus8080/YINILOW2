@@ -604,8 +604,8 @@ function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenPr
             </div>
           ) : null}
           <div className="detail-actions">
-            <button className="dark-btn" disabled={bagState === "adding"} onClick={() => onAddToBag(product)}>
-              {bagState === "adding" ? "Holding..." : canAdd ? "Add to bag" : "Preview only"} <ArrowRight size={18} />
+            <button className="dark-btn" disabled={bagState === "adding" || bagState === "held"} onClick={() => onAddToBag(product)}>
+              {bagState === "adding" ? "Holding..." : bagState === "held" ? "Added" : canAdd ? "Add to bag" : "Preview only"} <ArrowRight size={18} />
             </button>
             <button className="ghost-btn"><Heart size={18} /> Save</button>
           </div>
@@ -1926,18 +1926,17 @@ export function App() {
       return;
     }
     const cardKey = product.listingId;
-    setBagState("adding");
-    setCardStates((states) => ({ ...states, [cardKey]: "adding" }));
+    setBagState("held");
+    setCardStates((states) => ({ ...states, [cardKey]: "added" }));
+    setCartCount((count) => count + 1);
+    setToast({ type: "success", title: "Added to bag", message: `${product.name} is being confirmed now.` });
     try {
       await addToBag(product.listingId);
-      const cart = await getCart().catch(() => null);
-      setCartCount((count) => cart?.items?.length ?? count + 1);
-      setBagState("held");
-      setCardStates((states) => ({ ...states, [cardKey]: "added" }));
       setToast({ type: "success", title: "Added to bag", message: `${product.name} is held for 10 minutes.` });
     } catch (error) {
       const conflict = error.status === 409;
       setBagState(conflict ? "conflict" : "idle");
+      setCartCount((count) => Math.max(0, count - 1));
       setCardStates((states) => ({ ...states, [cardKey]: "failed" }));
       setToast({
         type: "warning",
