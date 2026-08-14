@@ -58,7 +58,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, createOrder, getCart, getListings } from "./api";
+import { addToBag, checkoutQuote, confirmSandboxPayment, createOrder, getCart, getListings, initializePayment } from "./api";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -834,6 +834,33 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
 }
 
 function OrderConfirmationPage({ order, onBrowse }) {
+  const [payment, setPayment] = useState(null);
+  const [paymentState, setPaymentState] = useState(order?.paymentStatus === "PAID" ? "paid" : "idle");
+
+  const startPayment = async () => {
+    if (!order?.orderId || paymentState === "starting") return;
+    setPaymentState("starting");
+    try {
+      const attempt = await initializePayment(order.orderId);
+      setPayment(attempt);
+      setPaymentState("ready");
+    } catch {
+      setPaymentState("error");
+    }
+  };
+
+  const confirmPayment = async () => {
+    if (!payment?.providerReference || paymentState === "confirming") return;
+    setPaymentState("confirming");
+    try {
+      const result = await confirmSandboxPayment(payment.providerReference);
+      setPayment(result);
+      setPaymentState("paid");
+    } catch {
+      setPaymentState("error");
+    }
+  };
+
   return (
     <>
       <CategoryNav
@@ -846,12 +873,29 @@ function OrderConfirmationPage({ order, onBrowse }) {
         <ShieldCheck size={46} />
         <span>Order created</span>
         <h1>{order?.orderNumber ?? "YINILOW ORDER"}</h1>
-        <p>Your order is reserved and waiting for payment connection. The next build will attach the real payment provider.</p>
+        <p>Your order is reserved and waiting for payment. This sandbox payment flow uses the same initialize and callback shape needed for the real provider.</p>
         <div>
           <strong>{formatMoney(order?.total, order?.currency)}</strong>
-          <em>{order?.status ?? "PAYMENT_PENDING"}</em>
+          <em>{paymentState === "paid" ? "PAID" : order?.status ?? "PAYMENT_PENDING"}</em>
         </div>
-        <button className="dark-btn" onClick={() => onBrowse("New Drop")}>Continue shopping <ArrowRight size={17} /></button>
+        <section className="payment-action-panel">
+          <h2>Payment</h2>
+          <p>{payment?.providerReference ? `Reference ${payment.providerReference}` : "Start a sandbox payment attempt for this order."}</p>
+          {paymentState === "paid" ? (
+            <span><ShieldCheck size={18} /> Payment confirmed</span>
+          ) : (
+            <div>
+              <button className="dark-btn" onClick={startPayment} disabled={paymentState === "starting"}>
+                {paymentState === "starting" ? "Starting..." : "Start payment"} <ArrowRight size={17} />
+              </button>
+              <button className="checkout-btn" onClick={confirmPayment} disabled={!payment || paymentState === "confirming"}>
+                {paymentState === "confirming" ? "Confirming..." : "Confirm sandbox payment"} <ShieldCheck size={17} />
+              </button>
+            </div>
+          )}
+          {paymentState === "error" ? <p className="hold-message warning">Payment step failed. Please try again.</p> : null}
+        </section>
+        <button className="ghost-btn" onClick={() => onBrowse("New Drop")}>Continue shopping <ArrowRight size={17} /></button>
       </section>
     </>
   );

@@ -61,3 +61,27 @@ export function createOrder(deliveryAddress) {
     }),
   });
 }
+
+export function initializePayment(orderId) {
+  return request("/api/v1/payments/initialize", {
+    method: "POST",
+    headers: {
+      "x-idempotency-key": `payment-${orderId}`,
+    },
+    body: JSON.stringify({
+      orderId,
+      provider: "SANDBOX",
+    }),
+  });
+}
+
+export function confirmSandboxPayment(providerReference) {
+  return request("/api/v1/payments/callbacks/sandbox", {
+    method: "POST",
+    body: JSON.stringify({
+      provider: "SANDBOX",
+      providerReference,
+      status: "success",
+    }),
+  });
+}

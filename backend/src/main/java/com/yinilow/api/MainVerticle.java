@@ -13,6 +13,9 @@ import com.yinilow.inventory.PostgresHoldService;
 import com.yinilow.order.MemoryOrderService;
 import com.yinilow.order.OrderManager;
 import com.yinilow.order.PostgresOrderService;
+import com.yinilow.payment.MemoryPaymentService;
+import com.yinilow.payment.PaymentManager;
+import com.yinilow.payment.PostgresPaymentService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.Promise;
@@ -26,6 +29,7 @@ public class MainVerticle extends AbstractVerticle {
   private volatile HoldManager holds;
   private volatile CartService carts;
   private volatile OrderManager orders;
+  private volatile PaymentManager payments;
   private volatile String dataMode;
 
   @Override
@@ -95,6 +99,17 @@ public class MainVerticle extends AbstractVerticle {
       OrderManager.OrderResult result = orders.createOrder(body == null ? new JsonObject() : body, idempotencyKey);
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
+    router.post("/api/v1/payments/initialize").handler(ctx -> {
+      JsonObject body = ctx.body().asJsonObject();
+      String idempotencyKey = ctx.request().getHeader("x-idempotency-key");
+      PaymentManager.PaymentResult result = payments.initializePayment(body == null ? new JsonObject() : body, idempotencyKey);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
+    router.post("/api/v1/payments/callbacks/sandbox").handler(ctx -> {
+      JsonObject body = ctx.body().asJsonObject();
+      PaymentManager.PaymentResult result = payments.confirmCallback(body == null ? new JsonObject() : body);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
 
     int port = config().getInteger("http.port", Integer.parseInt(System.getenv().getOrDefault("PORT", "8080")));
     vertx.createHttpServer()
@@ -109,6 +124,7 @@ public class MainVerticle extends AbstractVerticle {
     holds = new HoldService();
     carts = new CartService(catalog, holds);
     orders = new MemoryOrderService(carts);
+    payments = new MemoryPaymentService();
     dataMode = mode;
   }
 
@@ -125,12 +141,13 @@ public class MainVerticle extends AbstractVerticle {
       CatalogReader postgresCatalog = new PostgresCatalogService(database);
       HoldManager postgresHolds = new PostgresHoldService(database);
       CartService postgresCarts = new CartService(postgresCatalog, postgresHolds);
-      return new DataServices(postgresCatalog, postgresHolds, postgresCarts, new PostgresOrderService(database));
+      return new DataServices(postgresCatalog, postgresHolds, postgresCarts, new PostgresOrderService(database), new PostgresPaymentService(database));
     }).onSuccess(services -> {
       catalog = services.catalog();
       holds = services.holds();
       carts = services.carts();
       orders = services.orders();
+      payments = services.payments();
       dataMode = "postgres";
     }).onFailure(error -> {
       error.printStackTrace();
@@ -138,7 +155,7 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  private record DataServices(CatalogReader catalog, HoldManager holds, CartService carts, OrderManager orders) {
+  private record DataServices(CatalogReader catalog, HoldManager holds, CartService carts, OrderManager orders, PaymentManager payments) {
   }
 
   private static void notFound(io.vertx.ext.web.RoutingContext ctx, String code) {
