@@ -166,7 +166,7 @@ export function initializePayment(orderId) {
     },
     body: JSON.stringify({
       orderId,
-      provider: "SANDBOX",
+      provider: "PAYSTACK_MOBILE_MONEY",
     }),
   });
 }

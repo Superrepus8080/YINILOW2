@@ -1372,6 +1372,7 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
     city: "Accra",
     deliveryMethod: "Door delivery",
     paymentMethod: "MOBILE_MONEY",
+    momoProvider: "mtn",
     addressLine: "",
     notes: "",
   });
@@ -1461,6 +1462,14 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
                 </select>
               </label>
               <label>
+                MoMo network
+                <select value={form.momoProvider} onChange={updateField("momoProvider")}>
+                  <option value="mtn">MTN Mobile Money</option>
+                  <option value="vod">Telecel Cash</option>
+                  <option value="tgo">AirtelTigo Money</option>
+                </select>
+              </label>
+              <label>
                 Delivery address
                 <input value={form.addressLine} onChange={updateField("addressLine")} placeholder="Street, area, landmark" />
               </label>
@@ -1473,11 +1482,9 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
               <Lock size={21} />
               <div>
                 <strong>Payment method</strong>
-                <span>Choose how the customer will complete payment after the order is created.</span>
+                <span>YINILOW sends a Paystack Mobile Money charge prompt directly to the customer phone.</span>
                 <div className="payment-methods" aria-label="Payment methods">
-                  <button type="button" className={form.paymentMethod === "MOBILE_MONEY" ? "selected" : ""} onClick={() => setForm((current) => ({ ...current, paymentMethod: "MOBILE_MONEY" }))}><Lightning size={15} /> Mobile money</button>
-                  <button type="button" className={form.paymentMethod === "CARD" ? "selected" : ""} onClick={() => setForm((current) => ({ ...current, paymentMethod: "CARD" }))}><Lock size={15} /> Card</button>
-                  <button type="button" className={form.paymentMethod === "SANDBOX" ? "selected" : ""} onClick={() => setForm((current) => ({ ...current, paymentMethod: "SANDBOX" }))}><ShieldCheck size={15} /> Sandbox</button>
+                  <button type="button" className="selected"><Lightning size={15} /> Direct MoMo API</button>
                 </div>
               </div>
             </div>
@@ -1526,7 +1533,7 @@ function OrderConfirmationPage({ order, onBrowse, onTrack }) {
     try {
       const attempt = await initializePayment(order.orderId);
       setPayment(attempt);
-      setPaymentState("ready");
+      setPaymentState(attempt.status === "FAILED" ? "error" : "ready");
     } catch {
       setPaymentState("error");
     }
@@ -1557,7 +1564,7 @@ function OrderConfirmationPage({ order, onBrowse, onTrack }) {
           <ShieldCheck size={46} />
           <span>{paymentState === "paid" ? "Payment confirmed" : "Order created"}</span>
           <h1>{order?.orderNumber ?? "YINILOW ORDER"}</h1>
-          <p>Your order is reserved and waiting for payment. Start Paystack checkout, complete the test payment, then return here to verify the reference.</p>
+          <p>Your order is reserved and waiting for payment. YINILOW sends a direct Mobile Money prompt through Paystack, then verifies the reference by API.</p>
         </div>
         <div className="receipt-card">
           <div>
@@ -1575,19 +1582,16 @@ function OrderConfirmationPage({ order, onBrowse, onTrack }) {
         </div>
         <section className="payment-action-panel">
           <h2>Payment</h2>
-          <p>{payment?.providerReference ? `Reference ${payment.providerReference}` : "Start a Paystack payment attempt for this order."}</p>
+          <p>{payment?.displayText ?? (payment?.providerReference ? `Reference ${payment.providerReference}` : "Send a Mobile Money prompt to the customer phone.")}</p>
           {paymentState === "paid" ? (
             <span><ShieldCheck size={18} /> Payment confirmed</span>
           ) : (
             <div>
               <button className="dark-btn" onClick={startPayment} disabled={paymentState === "starting"}>
-                {paymentState === "starting" ? "Starting..." : "Start payment"} <ArrowRight size={17} />
+                {paymentState === "starting" ? "Sending prompt..." : payment ? "Resend prompt" : "Send MoMo prompt"} <ArrowRight size={17} />
               </button>
-              {payment?.authorizationUrl ? (
-                <a className="paystack-link" href={payment.authorizationUrl} target="_blank" rel="noreferrer">Open Paystack <ArrowRight size={17} /></a>
-              ) : null}
               <button className="checkout-btn" onClick={confirmPayment} disabled={!payment || paymentState === "confirming"}>
-                {paymentState === "confirming" ? "Verifying..." : "Verify payment"} <ShieldCheck size={17} />
+                {paymentState === "confirming" ? "Checking..." : "Check payment"} <ShieldCheck size={17} />
               </button>
             </div>
           )}

@@ -105,7 +105,7 @@ public class PostgresPaymentService implements PaymentManager {
         }
         JsonObject payload = toPayload(row);
         if (paystackEnabled()) {
-          return PaymentResult.success(initializePaystack(connection, payload));
+          return PaymentResult.success(createPaystackMobileMoneyCharge(connection, payload));
         }
         return PaymentResult.success(payload);
       }
@@ -114,12 +114,18 @@ public class PostgresPaymentService implements PaymentManager {
     }
   }
 
-  private JsonObject initializePaystack(Connection connection, JsonObject attempt) {
+  private JsonObject createPaystackMobileMoneyCharge(Connection connection, JsonObject attempt) {
     JsonObject order = orderForPayment(connection, attempt.getString("orderId"));
-    String email = order.getJsonObject("deliveryAddress", new JsonObject()).getString("email", "");
+    JsonObject deliveryAddress = order.getJsonObject("deliveryAddress", new JsonObject());
+    String email = deliveryAddress.getString("email", "");
     if (email.isBlank()) {
       email = "customer+" + attempt.getString("providerReference") + "@yinilow.local";
     }
+    String phone = cleanPhone(deliveryAddress.getString("phone", ""));
+    if (phone.isBlank()) {
+      throw new IllegalStateException("Mobile Money phone is required");
+    }
+    String mobileMoneyProvider = deliveryAddress.getString("momoProvider", "mtn");
     int amount = new BigDecimal(attempt.getValue("amount").toString())
       .multiply(new BigDecimal("100"))
       .setScale(0, RoundingMode.HALF_UP)
@@ -129,17 +135,18 @@ public class PostgresPaymentService implements PaymentManager {
       .put("amount", amount)
       .put("currency", attempt.getString("currency", "GHS"))
       .put("reference", attempt.getString("providerReference"))
-      .put("callback_url", paymentCallbackUrl)
-      .put("channels", new io.vertx.core.json.JsonArray().add("card").add("mobile_money").add("bank_transfer"))
+      .put("mobile_money", new JsonObject()
+        .put("phone", phone)
+        .put("provider", mobileMoneyProvider))
       .put("metadata", new JsonObject()
         .put("orderId", attempt.getString("orderId"))
         .put("orderNumber", order.getString("orderNumber")));
-    JsonObject response = paystack("POST", "/transaction/initialize", requestBody);
+    JsonObject response = paystack("POST", "/charge", requestBody);
     JsonObject data = response.getJsonObject("data", new JsonObject());
     return attempt
-      .put("status", "PENDING")
-      .put("authorizationUrl", data.getString("authorization_url", attempt.getString("authorizationUrl")))
-      .put("accessCode", data.getString("access_code"));
+      .put("status", data.getString("status", "PENDING").toUpperCase())
+      .put("displayText", data.getString("display_text", response.getString("message", "Approve the Mobile Money prompt on your phone.")))
+      .put("authorizationUrl", null);
   }
 
   private static void insertCallback(Connection connection, String provider, String reference, JsonObject payload) throws SQLException {
@@ -281,6 +288,10 @@ public class PostgresPaymentService implements PaymentManager {
 
   private boolean paystackEnabled() {
     return paystackSecretKey != null && !paystackSecretKey.isBlank();
+  }
+
+  private static String cleanPhone(String phone) {
+    return phone == null ? "" : phone.replaceAll("[^0-9+]", "");
   }
 
   private static JsonObject toPayload(ResultSet row) throws SQLException {
