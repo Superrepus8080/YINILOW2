@@ -1340,12 +1340,86 @@ button {
   box-shadow: 0 0 0 3px rgba(255, 208, 0, .16);
 }
 
+.seller-internal-shell {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 0;
+  align-items: start;
+  margin-top: 14px;
+  border-top: 1px solid #ebe5dc;
+  background: #fffdf8;
+}
+
+.seller-rail {
+  min-height: calc(100vh - 112px);
+  border-right: 1px solid #ebe5dc;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: sticky;
+  top: 0;
+}
+
+.seller-rail .logo {
+  font-size: 38px;
+}
+
+.seller-rail nav {
+  display: grid;
+  gap: 9px;
+}
+
+.seller-rail nav button {
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #191510;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.seller-rail nav button.selected {
+  background: #ffd000;
+}
+
+.seller-rail > div:last-child {
+  margin-top: auto;
+  border: 1px solid #e6ded2;
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+}
+
+.seller-rail > div:last-child strong,
+.seller-rail > div:last-child span {
+  display: block;
+  font-weight: 950;
+}
+
+.seller-workspace {
+  padding: 24px 28px 34px;
+}
+
 .seller-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;
   gap: 22px;
   align-items: start;
   margin-top: 18px;
+}
+
+.seller-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 22px;
+  align-items: start;
 }
 
 .seller-heading {
@@ -1358,6 +1432,47 @@ button {
   border-radius: 12px;
   background: #fffdfa;
   padding: 22px 24px;
+}
+
+.seller-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.seller-stats article {
+  border: 1px solid #ebe5dc;
+  border-radius: 10px;
+  background: #fffdfa;
+  padding: 18px;
+  box-shadow: 0 10px 24px rgba(23, 18, 10, .04);
+}
+
+.seller-stats strong {
+  display: block;
+  font-family: Anton, Impact, "Arial Black", sans-serif;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.seller-stats span,
+.seller-stats small {
+  display: block;
+}
+
+.seller-stats span {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.seller-stats small {
+  margin-top: 4px;
+  color: #665c50;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .seller-heading span,
@@ -1401,6 +1516,28 @@ button {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+}
+
+.seller-panel-title {
+  display: grid;
+  gap: 4px;
+}
+
+.seller-panel-title span,
+.seller-snapshot span {
+  color: #6a5c48;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.seller-panel-title h2 {
+  margin: 0;
+  font-family: Anton, Impact, "Arial Black", sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .seller-login {
@@ -1557,6 +1694,38 @@ button {
 
 .seller-preview .product-card {
   width: 100%;
+}
+
+.seller-snapshot {
+  border-top: 1px solid #ebe5dc;
+  padding-top: 14px;
+}
+
+.seller-snapshot strong,
+.seller-snapshot small,
+.seller-snapshot p {
+  display: block;
+}
+
+.seller-snapshot strong {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.seller-snapshot small {
+  margin-top: 3px;
+  color: #6b6258;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.seller-snapshot p {
+  margin: 10px 0 0;
+  color: #4d453d;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 650;
 }
 
 .seller-inventory {
@@ -3066,6 +3235,9 @@ button {
   .cart-layout,
   .checkout-layout,
   .seller-shell,
+  .seller-internal-shell,
+  .seller-main-grid,
+  .seller-stats,
   .browse-grid,
   .compact-related,
   .clothing-grid,
@@ -3123,6 +3295,21 @@ button {
   .seller-heading {
     align-items: start;
     flex-direction: column;
+  }
+
+  .seller-rail {
+    min-height: auto;
+    position: static;
+    border-right: 0;
+    border-bottom: 1px solid #ebe5dc;
+  }
+
+  .seller-rail nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .seller-workspace {
+    padding: 18px;
   }
 
   .seller-form {

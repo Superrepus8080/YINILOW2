@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Bell,
+  Camera as CameraIcon,
   ChevronDown as CaretDown,
   Clock3,
   Circle,
@@ -740,20 +741,45 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     }
   };
 
+  const sellerStats = {
+    total: inventory.length,
+    available: inventory.filter((listing) => listing.availabilityState === "AVAILABLE").length,
+    hidden: inventory.filter((listing) => listing.visibility === "HIDDEN").length,
+    sold: inventory.filter((listing) => listing.itemStatus === "SOLD").length,
+  };
+
   return (
     <>
-      <CategoryNav
-        items={["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
-        active="New Drop"
-        note="SELLER INTAKE. PUBLIC CATALOG."
-      />
-      <section className="seller-shell">
-        <div className="seller-heading">
-          <span>Seller console</span>
-          <h1>Manage live clothing stock</h1>
-          <p>{sellerSession ? `Signed in as ${sellerSession.displayName}` : "Sign in or create a seller account to publish and manage stock."}</p>
-          {sellerSession ? <button className="ghost-btn" onClick={logoutSeller}>Sign out</button> : null}
-        </div>
+      <section className="seller-internal-shell">
+        <aside className="seller-rail">
+          <Logo />
+          <nav>
+            {[
+              [GridNine, "Dashboard"],
+              [Package, "Catalog"],
+              [CameraIcon, "Photography"],
+              [Truck, "Fulfillment"],
+              [Headphones, "Support"],
+            ].map(([Icon, label]) => (
+              <button className={label === "Catalog" ? "selected" : ""} key={label}>
+                <Icon size={19} /> {label}
+              </button>
+            ))}
+          </nav>
+          <div>
+            <strong>YINILOW</strong>
+            <span>INTERNAL</span>
+          </div>
+        </aside>
+        <div className="seller-workspace">
+          <div className="seller-heading">
+            <div>
+              <span>Seller catalog</span>
+              <h1>Manage live clothing stock</h1>
+              <p>{sellerSession ? `Signed in as ${sellerSession.displayName}` : "Sign in or create a seller account to publish and manage stock."}</p>
+            </div>
+            {sellerSession ? <button className="ghost-btn" onClick={logoutSeller}>Sign out</button> : null}
+          </div>
         {!sellerSession ? (
           <form className="seller-login" onSubmit={submitLogin}>
             <div>
@@ -786,7 +812,26 @@ function SellerConsolePage({ onCreated, refreshListings }) {
           </form>
         ) : (
           <>
+        <section className="seller-stats">
+          {[
+            ["Live listings", sellerStats.total, "Owned by this seller"],
+            ["Available", sellerStats.available, "Ready for shoppers"],
+            ["Hidden", sellerStats.hidden, "Not public"],
+            ["Sold", sellerStats.sold, "Converted orders"],
+          ].map(([label, value, hint]) => (
+            <article key={label}>
+              <strong>{value}</strong>
+              <span>{label}</span>
+              <small>{hint}</small>
+            </article>
+          ))}
+        </section>
+        <div className="seller-main-grid">
         <form className="seller-form" onSubmit={submitListing}>
+          <div className="seller-panel-title wide">
+            <span>Create listing</span>
+            <h2>Item intake</h2>
+          </div>
           <label>
             Product title
             <input value={form.title} onChange={updateField("title")} placeholder="Vintage jacket" />
@@ -855,7 +900,10 @@ function SellerConsolePage({ onCreated, refreshListings }) {
           </div>
         </form>
         <aside className="seller-preview">
-          <span>Preview</span>
+          <div className="seller-panel-title">
+            <span>Preview</span>
+            <h2>Public card</h2>
+          </div>
           <ProductCard
             product={{
               id: "seller-preview",
@@ -876,7 +924,14 @@ function SellerConsolePage({ onCreated, refreshListings }) {
               Open live listing <ArrowRight size={17} />
             </button>
           ) : null}
+          <div className="seller-snapshot">
+            <span>Seller snapshot</span>
+            <strong>{sellerSession.displayName}</strong>
+            <small>{sellerSession.email}</small>
+            <p>Photos, measurements, pricing, and public availability are tied to this account.</p>
+          </div>
         </aside>
+        </div>
         <section className="seller-inventory">
           <div className="seller-inventory-head">
             <div>
@@ -913,6 +968,7 @@ function SellerConsolePage({ onCreated, refreshListings }) {
         </section>
           </>
         )}
+        </div>
       </section>
     </>
   );
