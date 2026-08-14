@@ -1371,7 +1371,12 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
               <Lock size={21} />
               <div>
                 <strong>Payment method</strong>
-                <span>Mobile money/card provider will connect here next. This step creates a payment-pending order.</span>
+                <span>Choose how the customer will complete payment after the order is created.</span>
+                <div className="payment-methods" aria-label="Payment methods">
+                  <button type="button" className="selected"><Lightning size={15} /> Mobile money</button>
+                  <button type="button"><Lock size={15} /> Card</button>
+                  <button type="button"><ShieldCheck size={15} /> Sandbox</button>
+                </div>
               </div>
             </div>
             {submitState === "blocked" ? <p className="hold-message warning">Checkout is no longer available. Return to your bag and refresh held items.</p> : null}
@@ -1380,12 +1385,18 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
           <aside className="quote-panel checkout-review">
             <h2>Order review</h2>
             {status === "loading" ? <p className="cart-empty">Loading order...</p> : null}
-            {items.map((item) => (
-              <div className="review-line" key={item.cartItemId}>
-                <span>{item.title}</span>
-                <strong>{formatMoney(item.price, item.currency)}</strong>
-              </div>
-            ))}
+            <div className="review-items">
+              {items.map((item) => (
+                <div className="review-line" key={item.cartItemId}>
+                  <img src={assetImageByUrl[item.imageUrl] ?? prodTee} alt={item.title} />
+                  <div>
+                    <span>{item.title}</span>
+                    <small>{item.sizeLabel ? `Size ${item.sizeLabel}` : "Verified item"}</small>
+                  </div>
+                  <strong>{formatMoney(item.price, item.currency)}</strong>
+                </div>
+              ))}
+            </div>
             <dl>
               <div><dt>Subtotal</dt><dd>{formatMoney(quote?.subtotal, quote?.currency)}</dd></div>
               <div><dt>Service fee</dt><dd>{formatMoney(quote?.serviceFee, quote?.currency)}</dd></div>
@@ -1395,6 +1406,7 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
             <button className="checkout-btn" type="submit" disabled={!canSubmit || submitState === "submitting"}>
               {submitState === "submitting" ? "Creating order..." : "Create order"} <ArrowRight size={17} />
             </button>
+            {!canSubmit ? <p className="checkout-hint">Add name, phone, and delivery address to continue.</p> : null}
           </aside>
         </form>
       </section>
@@ -1438,14 +1450,26 @@ function OrderConfirmationPage({ order, onBrowse }) {
         note="ORDER CREATED. PAYMENT NEXT."
         onSelect={onBrowse}
       />
-      <section className="confirmation-shell">
-        <ShieldCheck size={46} />
-        <span>Order created</span>
-        <h1>{order?.orderNumber ?? "YINILOW ORDER"}</h1>
-        <p>Your order is reserved and waiting for payment. This sandbox payment flow uses the same initialize and callback shape needed for the real provider.</p>
-        <div>
-          <strong>{formatMoney(order?.total, order?.currency)}</strong>
-          <em>{paymentState === "paid" ? "PAID" : order?.status ?? "PAYMENT_PENDING"}</em>
+      <section className={paymentState === "paid" ? "confirmation-shell paid" : "confirmation-shell"}>
+        <div className="confirmation-hero">
+          <ShieldCheck size={46} />
+          <span>{paymentState === "paid" ? "Payment confirmed" : "Order created"}</span>
+          <h1>{order?.orderNumber ?? "YINILOW ORDER"}</h1>
+          <p>Your order is reserved and waiting for payment. This sandbox flow uses the same initialize and callback shape needed for the real provider.</p>
+        </div>
+        <div className="receipt-card">
+          <div>
+            <span>Total</span>
+            <strong>{formatMoney(order?.total, order?.currency)}</strong>
+          </div>
+          <div>
+            <span>Status</span>
+            <em>{paymentState === "paid" ? "PAID" : order?.status ?? "PAYMENT_PENDING"}</em>
+          </div>
+          <div>
+            <span>Reference</span>
+            <strong>{payment?.providerReference ?? "Pending"}</strong>
+          </div>
         </div>
         <section className="payment-action-panel">
           <h2>Payment</h2>

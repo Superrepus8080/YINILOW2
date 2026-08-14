@@ -2112,18 +2112,73 @@ button {
   line-height: 1.4;
 }
 
-.checkout-review .review-line {
-  border-bottom: 1px solid #ebe5dc;
-  padding: 11px 0;
+.payment-methods {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.payment-methods button {
+  min-height: 34px;
+  border: 1px solid #e4dcd1;
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #15110b;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.payment-methods button.selected {
+  border-color: #15110b;
+  background: #15110b;
+  color: #fff;
+}
+
+.review-items {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.checkout-review .review-line {
+  border: 1px solid #ebe5dc;
+  border-radius: 9px;
+  background: #fff;
+  padding: 9px;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 11px;
+}
+
+.review-line img {
+  width: 56px;
+  height: 50px;
+  border-radius: 7px;
+  object-fit: cover;
+  outline: 1px solid oklch(0 0 0 / .1);
 }
 
 .review-line span,
-.review-line strong {
+.review-line strong,
+.review-line small {
+  display: block;
   font-size: 12px;
   font-weight: 850;
+}
+
+.review-line small {
+  margin-top: 3px;
+  color: #665d52;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .review-line strong {
@@ -2131,22 +2186,41 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+.checkout-hint {
+  margin: 10px 0 0;
+  color: #665d52;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .confirmation-shell {
-  min-height: 440px;
   margin-top: 22px;
   border: 1px solid #ebe5dc;
   border-radius: 14px;
   background: #fffdfa;
   display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+  gap: 22px;
+  align-items: start;
   text-align: center;
   padding: 44px;
   box-shadow: 0 12px 34px rgba(22, 18, 12, .045);
 }
 
-.confirmation-shell svg {
+.confirmation-shell.paid {
+  border-color: #d5ebcc;
+  background: linear-gradient(180deg, #fffdfa, #f7fff2);
+}
+
+.confirmation-hero {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  text-align: left;
+}
+
+.confirmation-hero svg {
   color: #0c8a35;
 }
 
@@ -2157,14 +2231,14 @@ button {
   letter-spacing: .08em;
 }
 
-.confirmation-shell h1 {
+.confirmation-hero h1 {
   margin: 0;
   font-family: Anton, Impact, "Arial Black", sans-serif;
   font-size: 62px;
   line-height: .9;
 }
 
-.confirmation-shell p {
+.confirmation-hero p {
   max-width: 560px;
   margin: 0;
   color: #3f3931;
@@ -2172,16 +2246,33 @@ button {
   line-height: 1.45;
 }
 
-.confirmation-shell div {
-  display: flex;
-  align-items: center;
+.receipt-card {
+  border: 1px solid #ebe5dc;
+  border-radius: 12px;
+  background: #fff;
+  padding: 18px;
+  display: grid;
+  gap: 0;
+  text-align: left;
+}
+
+.receipt-card > div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
   gap: 14px;
-  margin: 8px 0;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #ebe5dc;
+}
+
+.receipt-card > div:last-child {
+  border-bottom: 0;
 }
 
 .confirmation-shell strong {
   font-size: 22px;
   font-weight: 950;
+  overflow-wrap: anywhere;
 }
 
 .confirmation-shell em {
@@ -2195,7 +2286,7 @@ button {
 }
 
 .payment-action-panel {
-  width: min(100%, 620px);
+  grid-column: 1 / -1;
   border: 1px solid #ebe5dc;
   border-radius: 12px;
   background: #fff;
@@ -3602,6 +3693,34 @@ button {
 
   .checkout-fields {
     grid-template-columns: 1fr;
+  }
+
+  .payment-methods {
+    display: grid;
+  }
+
+  .checkout-review .review-line {
+    grid-template-columns: 64px 1fr;
+  }
+
+  .review-line strong {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .confirmation-shell {
+    grid-template-columns: 1fr;
+    padding: 28px 18px;
+  }
+
+  .confirmation-hero {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .receipt-card > div {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .seller-heading {
