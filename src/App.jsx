@@ -516,7 +516,8 @@ function ToastNotice({ toast, onClose }) {
 
 function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
   const canAdd = Boolean(onAddToBag && product.listingId);
-  const actionLabel = state === "adding" ? "Adding..." : state === "added" ? "Added" : state === "failed" ? "Try again" : "Add";
+  const actionLabel = state === "adding" ? "Adding..." : state === "added" ? "Added" : state === "failed" ? "Try again" : "Add to bag";
+  const sizeText = product.sizeLabel ? `Size ${product.sizeLabel}` : product.category;
 
   function handleAdd(event) {
     event.stopPropagation();
@@ -525,7 +526,7 @@ function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
 
   return (
     <article
-      className="product-card"
+      className={`product-card ${fashion ? "fashion-product-card" : "standard-product-card"} ${canAdd ? "has-card-action" : ""}`}
       onClick={() => onOpen?.(product)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -537,19 +538,25 @@ function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
       tabIndex={0}
     >
       <div className="product-image">
+        {fashion ? (
+          <div className="product-badges">
+            {sizeText ? <span>{sizeText}</span> : null}
+            {product.condition ? <span>{product.condition}</span> : null}
+          </div>
+        ) : null}
         <img src={product.image} alt={product.name} />
       </div>
       <div className="product-meta">
         <div>
           <h3>{product.name}</h3>
           <strong>{product.price}</strong>
-          {product.stockLabel ? <span className="stock-label">{product.stockLabel}</span> : null}
           {product.rating ? <span className="rating">★ {product.rating}</span> : null}
         </div>
         {fashion ? (
           <button aria-label={`Save ${product.name}`} onClick={(event) => event.stopPropagation()}><Heart size={20} /></button>
         ) : null}
       </div>
+      {product.stockLabel ? <span className="stock-label">{product.stockLabel}</span> : null}
       {canAdd ? (
         <button
           className={`card-add-btn ${state}`}
