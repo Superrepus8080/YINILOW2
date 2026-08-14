@@ -59,5 +59,9 @@ public class HoldService implements HoldManager {
     static HoldResult conflict(Hold hold) {
       return new HoldResult(false, hold, "ITEM_HELD");
     }
+
+    static HoldResult unavailable() {
+      return new HoldResult(false, null, "ITEM_UNAVAILABLE");
+    }
   }
 }

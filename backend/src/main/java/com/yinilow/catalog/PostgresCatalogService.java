@@ -68,7 +68,7 @@ public class PostgresCatalogService implements CatalogReader {
         pl.currency,
         COALESCE(media.url, '/assets/prod-tee.jpg') AS image_url,
         pl.pile_eligible,
-        NOT EXISTS (
+        iu.status = 'LISTED' AND NOT EXISTS (
           SELECT 1
           FROM inventory.inventory_holds hold
           WHERE hold.item_unit_id = iu.id

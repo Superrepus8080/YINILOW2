@@ -27,6 +27,11 @@ public class PostgresHoldService implements HoldManager {
         return HoldService.HoldResult.conflict(existing.get());
       }
 
+      if (!isHoldable(connection, itemUnitId, listingId)) {
+        connection.rollback();
+        return HoldService.HoldResult.unavailable();
+      }
+
       Hold hold = insertHold(connection, itemUnitId, listingId, cartId);
       connection.commit();
       return HoldService.HoldResult.created(hold);
@@ -82,6 +87,27 @@ public class PostgresHoldService implements HoldManager {
           return Optional.empty();
         }
         return Optional.of(toHold(row));
+      }
+    }
+  }
+
+  private static boolean isHoldable(Connection connection, String itemUnitCode, String listingPublicCode) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+      SELECT 1
+      FROM catalog.product_listings listing
+      JOIN catalog.listing_units listing_unit ON listing_unit.listing_id = listing.id
+      JOIN catalog.item_units unit ON unit.id = listing_unit.item_unit_id
+      WHERE listing.public_code = ?
+        AND unit.unit_code = ?
+        AND listing.visibility = 'PUBLIC'
+        AND listing_unit.status = 'ACTIVE'
+        AND unit.status = 'LISTED'
+      LIMIT 1
+      """)) {
+      statement.setString(1, listingPublicCode);
+      statement.setString(2, itemUnitCode);
+      try (ResultSet row = statement.executeQuery()) {
+        return row.next();
       }
     }
   }
