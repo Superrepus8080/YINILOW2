@@ -11,6 +11,7 @@ import java.text.Normalizer;
 import java.util.Locale;
 
 public class PostgresCatalogAdmin implements CatalogAdmin {
+  private static final int MAX_IMAGE_URL_LENGTH = 2_100_000;
   private final Database database;
 
   public PostgresCatalogAdmin(Database database) {
@@ -99,6 +100,10 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
     if (price.compareTo(BigDecimal.ZERO) <= 0) {
       return CreateListingResult.failure(400, "PRICE_REQUIRED");
     }
+    String imageUrl = request.getString("imageUrl", "/assets/prod-tee.jpg");
+    if (!validImageUrl(imageUrl)) {
+      return CreateListingResult.failure(400, "IMAGE_NOT_ALLOWED");
+    }
 
     try (Connection connection = database.connection()) {
       connection.setAutoCommit(false);
@@ -108,7 +113,7 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
       String itemUnitId = createItemUnit(connection, request, unitCode);
       String listingId = createProductListing(connection, request, listingCode, title, slug(listingCode), categoryId, price, sellerId);
       linkListingUnit(connection, listingId, itemUnitId);
-      createImage(connection, itemUnitId, request.getString("imageUrl", "/assets/prod-tee.jpg"));
+      createImage(connection, itemUnitId, imageUrl);
       createMeasurements(connection, itemUnitId, request.getJsonObject("measurements", new JsonObject()));
       connection.commit();
       return CreateListingResult.created(new JsonObject()
@@ -245,6 +250,22 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
       statement.setString(2, clean(imageUrl).isBlank() ? "/assets/prod-tee.jpg" : clean(imageUrl));
       statement.executeUpdate();
     }
+  }
+
+  private static boolean validImageUrl(String imageUrl) {
+    String cleanImageUrl = clean(imageUrl);
+    if (cleanImageUrl.isBlank()) {
+      return true;
+    }
+    if (cleanImageUrl.length() > MAX_IMAGE_URL_LENGTH) {
+      return false;
+    }
+    return cleanImageUrl.startsWith("/assets/")
+      || cleanImageUrl.startsWith("https://")
+      || cleanImageUrl.startsWith("data:image/jpeg;base64,")
+      || cleanImageUrl.startsWith("data:image/png;base64,")
+      || cleanImageUrl.startsWith("data:image/webp;base64,")
+      || cleanImageUrl.startsWith("data:image/svg+xml;base64,");
   }
 
   private static void createMeasurements(Connection connection, String itemUnitId, JsonObject measurements) throws SQLException {

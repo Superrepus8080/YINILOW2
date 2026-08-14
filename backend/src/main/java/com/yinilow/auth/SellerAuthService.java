@@ -124,7 +124,10 @@ public class SellerAuthService {
          var statement = connection.prepareStatement("""
            INSERT INTO auth.seller_accounts (email, display_name, password_hash)
            VALUES ('seller@yinilow.local', 'YINILOW Seller', ?)
-           ON CONFLICT (email) DO NOTHING
+           ON CONFLICT (email) DO UPDATE
+           SET password_hash = EXCLUDED.password_hash,
+             updated_at = now()
+           WHERE auth.seller_accounts.password_hash = ''
            """)) {
       statement.setString(1, hash(demoPin));
       statement.executeUpdate();

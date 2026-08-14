@@ -73,6 +73,14 @@ public class DatabaseBootstrap {
 
       ALTER TABLE catalog.product_listings
       ADD COLUMN IF NOT EXISTS seller_account_id UUID REFERENCES auth.seller_accounts(id);
+
+      INSERT INTO auth.seller_accounts (email, display_name, password_hash)
+      VALUES ('seller@yinilow.local', 'YINILOW Seller', '')
+      ON CONFLICT (email) DO NOTHING;
+
+      UPDATE catalog.product_listings
+      SET seller_account_id = (SELECT id FROM auth.seller_accounts WHERE email = 'seller@yinilow.local')
+      WHERE seller_account_id IS NULL;
       """;
   }
 
