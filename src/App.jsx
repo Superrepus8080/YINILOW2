@@ -58,7 +58,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, getCart, getListings } from "./api";
+import { addToBag, checkoutQuote, getCart, getListings } from "./api";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -75,6 +75,12 @@ const listingImageById = {
   lst_vintage_polo: prodRugby,
   lst_leather_jacket: prodLeather,
   lst_camo_cargo: prodCargo,
+};
+
+const assetImageByUrl = {
+  "/assets/prod-rugby.jpg": prodRugby,
+  "/assets/prod-leather.jpg": prodLeather,
+  "/assets/prod-cargo.jpg": prodCargo,
 };
 
 function formatCondition(value) {
@@ -98,6 +104,23 @@ function normalizeApiProduct(product) {
     sizeLabel: product.sizeLabel,
     availabilityState: product.availabilityState,
   };
+}
+
+function formatMoney(value, currency = "GHS") {
+  const amount = Number(value ?? 0);
+  return `${currency} ${amount.toFixed(2)}`;
+}
+
+function secondsUntil(value) {
+  if (!value) return 0;
+  return Math.max(0, Math.floor((new Date(value).getTime() - Date.now()) / 1000));
+}
+
+function formatCountdown(value) {
+  const seconds = secondsUntil(value);
+  const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const remainder = (seconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${remainder}`;
 }
 
 const dropProducts = [
@@ -135,7 +158,7 @@ function Logo() {
   );
 }
 
-function Header({ active, setActive, cartCount = 0 }) {
+function Header({ active, setActive, cartCount = 0, onCart }) {
   const isHome = active === "home";
   return (
     <header className="topbar">
@@ -174,7 +197,7 @@ function Header({ active, setActive, cartCount = 0 }) {
         <button>
           <User size={22} /> Account
         </button>
-        <button className="cart">
+        <button className="cart" onClick={onCart}>
           <ShoppingCart size={23} />
           <span>{isHome ? 0 : cartCount}</span>
           Cart
@@ -551,6 +574,130 @@ function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, cloth
           {related.map((item) => (
             <ProductCard key={item.id} product={item} fashion={!isHome} onOpen={onOpenProduct} />
           ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function CartPage({ onBrowse, onOpenProduct, refreshCartCount }) {
+  const [cart, setCart] = useState(null);
+  const [quote, setQuote] = useState(null);
+  const [status, setStatus] = useState("loading");
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("loading");
+    Promise.allSettled([getCart(), checkoutQuote()])
+      .then(([cartResult, quoteResult]) => {
+        if (cancelled) return;
+        if (cartResult.status === "fulfilled") {
+          setCart(cartResult.value);
+          refreshCartCount(cartResult.value.items?.length ?? 0);
+        }
+        if (quoteResult.status === "fulfilled") {
+          setQuote(quoteResult.value);
+        } else if (quoteResult.reason?.payload) {
+          setQuote(quoteResult.reason.payload);
+        }
+        setStatus(cartResult.status === "fulfilled" ? "ready" : "error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshCartCount]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const items = cart?.items ?? [];
+  const expiredItems = new Set(quote?.expiredCartItems ?? []);
+  const checkoutAllowed = Boolean(quote?.checkoutAllowed);
+
+  return (
+    <>
+      <CategoryNav
+        items={["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        active="New Drop"
+        note="ONE BAG. ONE HOLD TIMER. ONE CHECKOUT."
+        onSelect={onBrowse}
+      />
+      <section className="cart-shell">
+        <div className="cart-heading">
+          <span>Clothing & Accessories</span>
+          <h1>Your Bag</h1>
+          <p>Held thrift pieces stay reserved for a short time. Checkout before the timer runs out.</p>
+        </div>
+        <div className="cart-layout">
+          <section className="bag-panel">
+            <div className="bag-toolbar">
+              <h2>Held items</h2>
+              <button onClick={() => onBrowse("New Drop")}>Keep shopping <ArrowRight size={15} /></button>
+            </div>
+            {status === "loading" ? <p className="cart-empty">Loading your bag...</p> : null}
+            {status === "error" ? <p className="cart-empty warning">We could not load your bag. Try again in a moment.</p> : null}
+            {status === "ready" && items.length === 0 ? (
+              <article className="empty-bag">
+                <ShoppingCart size={34} />
+                <h3>Your bag is empty</h3>
+                <p>Find a one-of-one piece and hold it before checkout.</p>
+                <button className="dark-btn" onClick={() => onBrowse("New Drop")}>Shop new drop <ArrowRight size={17} /></button>
+              </article>
+            ) : null}
+            {items.map((item) => {
+              const expired = expiredItems.has(item.cartItemId) || secondsUntil(item.holdExpiresAt) === 0;
+              const product = {
+                id: item.listingId,
+                listingId: item.listingId,
+                name: item.title,
+                price: formatMoney(item.price, item.currency),
+                image: assetImageByUrl[item.imageUrl] ?? prodTee,
+                category: "New Drop",
+                condition: formatCondition(item.conditionPublic),
+                seller: "YINILOW Verified",
+                location: "Ghana",
+                note: "Held in your bag for checkout.",
+                sizeLabel: item.sizeLabel,
+              };
+              return (
+                <article className={expired ? "bag-item expired" : "bag-item"} key={item.cartItemId}>
+                  <button className="bag-thumb" onClick={() => onOpenProduct(product)}>
+                    <img src={product.image} alt={item.title} />
+                  </button>
+                  <div>
+                    <span>{item.conditionPublic ? formatCondition(item.conditionPublic) : "Verified"} / Size {item.sizeLabel}</span>
+                    <h3>{item.title}</h3>
+                    <p>{expired ? "Hold expired" : `Hold expires in ${formatCountdown(item.holdExpiresAt)}`}</p>
+                  </div>
+                  <strong>{formatMoney(item.price, item.currency)}</strong>
+                </article>
+              );
+            })}
+          </section>
+          <aside className="quote-panel">
+            <h2>Checkout quote</h2>
+            <dl>
+              <div><dt>Subtotal</dt><dd>{formatMoney(quote?.subtotal, quote?.currency)}</dd></div>
+              <div><dt>Service fee</dt><dd>{formatMoney(quote?.serviceFee, quote?.currency)}</dd></div>
+              <div><dt>Delivery</dt><dd>{formatMoney(quote?.deliveryFee, quote?.currency)}</dd></div>
+              <div className="quote-total"><dt>Total</dt><dd>{formatMoney(quote?.total, quote?.currency)}</dd></div>
+            </dl>
+            {checkoutAllowed ? (
+              <p className="quote-ok"><Lock size={17} /> Ready for secure checkout.</p>
+            ) : (
+              <p className="quote-blocked"><Clock3 size={17} /> Add or refresh held items to checkout.</p>
+            )}
+            <button className="checkout-btn" disabled={!checkoutAllowed}>Proceed to checkout <ArrowRight size={17} /></button>
+            <div className="quote-notes">
+              <span><ShieldCheck size={18} /> One-off protection active</span>
+              <span><Truck size={18} /> Delivery across Ghana</span>
+              <span><Lock size={18} /> Secure payment step next</span>
+            </div>
+          </aside>
         </div>
       </section>
     </>
@@ -965,6 +1112,11 @@ export function App() {
     setBagState("idle");
     setScreen({ type: "product", category: product.category, product });
   };
+  const openCart = () => {
+    setActive("clothing");
+    setBagState("idle");
+    setScreen({ type: "cart", category: "Bag", product: null });
+  };
   const holdProduct = async (product) => {
     if (active !== "clothing" || !product.listingId) {
       setBagState("held");
@@ -987,6 +1139,9 @@ export function App() {
     if (screen.type === "product" && screen.product) {
       return <ProductDetail active={active} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} bagState={bagState} />;
     }
+    if (screen.type === "cart") {
+      return <CartPage onBrowse={browse} onOpenProduct={openProduct} refreshCartCount={setCartCount} />;
+    }
     if (screen.type === "dig") {
       return <DigPilePage onBrowse={browse} onOpenProduct={openProduct} />;
     }
@@ -1003,7 +1158,7 @@ export function App() {
 
   return (
     <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>
-      <Header active={active} setActive={switchWorld} cartCount={cartCount} />
+      <Header active={active} setActive={switchWorld} cartCount={cartCount} onCart={openCart} />
       {active === "clothing" ? (
         <div className="api-status">
           {apiStatus === "connected" ? "Live catalog connected" : "Prototype catalog fallback"}
