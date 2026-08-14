@@ -62,8 +62,16 @@ public class MainVerticle extends AbstractVerticle {
       .allowedHeader("authorization")
       .allowedHeader("content-type")
       .allowedHeader("x-idempotency-key"));
+    router.route().handler(ctx -> {
+      ctx.response()
+        .putHeader("x-content-type-options", "nosniff")
+        .putHeader("referrer-policy", "strict-origin-when-cross-origin")
+        .putHeader("permissions-policy", "camera=(), microphone=(), geolocation=()")
+        .putHeader("cache-control", "no-store");
+      ctx.next();
+    });
     router.get("/api/v1/realtime/signaling/:roomId").handler(realtime::handle);
-    router.route().handler(BodyHandler.create());
+    router.route().handler(BodyHandler.create().setBodyLimit(1_600_000));
 
     router.get("/health").handler(ctx -> ctx.json(new JsonObject()
       .put("status", "ok")
@@ -136,6 +144,24 @@ public class MainVerticle extends AbstractVerticle {
       }
       JsonObject body = ctx.body().asJsonObject();
       CatalogAdmin.CreateListingResult result = catalogAdmin.updateVisibility(ctx.pathParam("id"), body == null ? new JsonObject() : body, session.get().sellerId());
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
+    router.get("/api/v1/admin/orders").handler(ctx -> {
+      Optional<SellerAuthService.SellerSession> session = sellerAuth.authenticate(ctx.request().getHeader("authorization"));
+      if (session.isEmpty()) {
+        unauthorized(ctx);
+        return;
+      }
+      ctx.json(orders.adminOrders(session.get().sellerId()));
+    });
+    router.patch("/api/v1/admin/orders/:id/status").handler(ctx -> {
+      Optional<SellerAuthService.SellerSession> session = sellerAuth.authenticate(ctx.request().getHeader("authorization"));
+      if (session.isEmpty()) {
+        unauthorized(ctx);
+        return;
+      }
+      JsonObject body = ctx.body().asJsonObject();
+      OrderManager.OrderResult result = orders.updateOrderStatus(ctx.pathParam("id"), body == null ? new JsonObject() : body, session.get().sellerId());
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
 

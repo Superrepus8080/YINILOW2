@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.Set;
 
 public class RealtimeTelemetryService {
-  private static final Set<String> SAFE_TYPES = Set.of("presence", "tag-hover", "latency", "heartbeat");
+  private static final Set<String> SAFE_TYPES = Set.of("presence", "tag-hover", "latency", "heartbeat", "order-tracking");
   private volatile Database database;
   private volatile JsonObject lastMemoryEvent = new JsonObject();
 

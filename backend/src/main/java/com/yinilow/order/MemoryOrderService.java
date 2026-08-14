@@ -1,6 +1,7 @@
 package com.yinilow.order;
 
 import com.yinilow.cart.CartService;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.Map;
 import java.util.UUID;
@@ -54,5 +55,28 @@ public class MemoryOrderService implements OrderManager {
       return OrderResult.failure(404, "ORDER_NOT_FOUND");
     }
     return new OrderResult(true, 200, order.copy());
+  }
+
+  @Override
+  public JsonArray adminOrders(String sellerId) {
+    JsonArray orders = new JsonArray();
+    ordersByNumber.values().forEach(order -> orders.add(order.copy()));
+    return orders;
+  }
+
+  @Override
+  public OrderResult updateOrderStatus(String orderId, JsonObject request, String sellerId) {
+    for (JsonObject order : ordersByNumber.values()) {
+      if (order.getString("orderId", "").equals(orderId)) {
+        String paymentStatus = request.getString("paymentStatus");
+        String deliveryStatus = request.getString("deliveryStatus");
+        String status = request.getString("status");
+        if (paymentStatus != null && !paymentStatus.isBlank()) order.put("paymentStatus", paymentStatus);
+        if (deliveryStatus != null && !deliveryStatus.isBlank()) order.put("deliveryStatus", deliveryStatus);
+        if (status != null && !status.isBlank()) order.put("status", status);
+        return new OrderResult(true, 200, order.copy());
+      }
+    }
+    return OrderResult.failure(404, "ORDER_NOT_FOUND");
   }
 }

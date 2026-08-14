@@ -146,6 +146,18 @@ export function getOrder(orderNumber, phone) {
   return request(`/api/v1/orders/${encodeURIComponent(orderNumber)}?${params.toString()}`);
 }
 
+export function getAdminOrders() {
+  return request("/api/v1/admin/orders", { headers: sellerHeaders() });
+}
+
+export function updateAdminOrderStatus(orderId, updates) {
+  return request(`/api/v1/admin/orders/${encodeURIComponent(orderId)}/status`, {
+    method: "PATCH",
+    headers: sellerHeaders(),
+    body: JSON.stringify(updates),
+  });
+}
+
 export function initializePayment(orderId) {
   return request("/api/v1/payments/initialize", {
     method: "POST",
@@ -159,11 +171,11 @@ export function initializePayment(orderId) {
   });
 }
 
-export function confirmSandboxPayment(providerReference) {
+export function confirmPayment(providerReference, provider = "PAYSTACK") {
   return request("/api/v1/payments/callbacks/sandbox", {
     method: "POST",
     body: JSON.stringify({
-      provider: "SANDBOX",
+      provider,
       providerReference,
       status: "success",
     }),

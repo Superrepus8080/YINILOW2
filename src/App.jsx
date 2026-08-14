@@ -78,7 +78,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, createSellerAccount, getAdminListings, getCart, getListings, getOrder, getStoredSellerSession, initializePayment, recordRealtimeTelemetry, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
+import { addToBag, checkoutQuote, clearSellerSession, confirmPayment as verifyPaymentReference, createAdminListing, createOrder, createSellerAccount, getAdminListings, getAdminOrders, getCart, getListings, getOrder, getStoredSellerSession, initializePayment, recordRealtimeTelemetry, sellerLogin, sellerLogout, updateAdminListingVisibility, updateAdminOrderStatus } from "./api";
 import { createRealtimeDataChannel } from "./realtime";
 
 const catalogProductImages = {
@@ -794,6 +794,9 @@ function SellerConsolePage({ onCreated, refreshListings }) {
   const [inventory, setInventory] = useState([]);
   const [inventoryStatus, setInventoryStatus] = useState("loading");
   const [updatingListing, setUpdatingListing] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [ordersStatus, setOrdersStatus] = useState("loading");
+  const [updatingOrder, setUpdatingOrder] = useState(null);
 
   const loadInventory = async () => {
     if (!getStoredSellerSession()) {
@@ -819,11 +822,37 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     }
   };
 
+  const loadOrders = async () => {
+    if (!getStoredSellerSession()) {
+      setOrdersStatus("locked");
+      return [];
+    }
+    setOrdersStatus("loading");
+    try {
+      const sellerOrders = await getAdminOrders();
+      setOrders(sellerOrders);
+      setOrdersStatus("ready");
+      return sellerOrders;
+    } catch (error) {
+      if (error.status === 401) {
+        clearSellerSession();
+        setSellerSession(null);
+        setOrders([]);
+        setOrdersStatus("locked");
+        return [];
+      }
+      setOrdersStatus("error");
+      return [];
+    }
+  };
+
   useEffect(() => {
     if (sellerSession) {
       loadInventory();
+      loadOrders();
     } else {
       setInventoryStatus("locked");
+      setOrdersStatus("locked");
     }
   }, [sellerSession]);
 
@@ -870,6 +899,16 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     }
   };
 
+  const moveOrder = async (order, next) => {
+    setUpdatingOrder(order.orderId);
+    try {
+      await updateAdminOrderStatus(order.orderId, next);
+      await loadOrders();
+    } finally {
+      setUpdatingOrder(null);
+    }
+  };
+
   const submitLogin = async (event) => {
     event.preventDefault();
     setLoginStatus("checking");
@@ -888,7 +927,9 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     await sellerLogout();
     setSellerSession(null);
     setInventory([]);
+    setOrders([]);
     setInventoryStatus("locked");
+    setOrdersStatus("locked");
   };
 
   const submitListing = async (event) => {
@@ -929,6 +970,7 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     available: inventory.filter((listing) => listing.availabilityState === "AVAILABLE").length,
     hidden: inventory.filter((listing) => listing.visibility === "HIDDEN").length,
     sold: inventory.filter((listing) => listing.itemStatus === "SOLD").length,
+    orders: orders.length,
   };
 
   return (
@@ -1001,6 +1043,7 @@ function SellerConsolePage({ onCreated, refreshListings }) {
             ["Available", sellerStats.available, "Ready for shoppers"],
             ["Hidden", sellerStats.hidden, "Not public"],
             ["Sold", sellerStats.sold, "Converted orders"],
+            ["Orders", sellerStats.orders, "Need fulfillment"],
           ].map(([label, value, hint]) => (
             <article key={label}>
               <strong>{value}</strong>
@@ -1149,6 +1192,42 @@ function SellerConsolePage({ onCreated, refreshListings }) {
             {inventoryStatus === "ready" && inventory.length === 0 ? <p className="seller-empty">No listings yet.</p> : null}
           </div>
         </section>
+        <section className="seller-inventory seller-orders">
+          <div className="seller-inventory-head">
+            <div>
+              <span>Orders</span>
+              <h2>Fulfillment queue</h2>
+            </div>
+            <button className="ghost-btn" onClick={loadOrders}>Refresh</button>
+          </div>
+          {ordersStatus === "error" ? (
+            <p className="hold-message warning">Orders could not be loaded.</p>
+          ) : null}
+          <div className="seller-table">
+            {orders.map((order) => (
+              <article className="seller-row order-row" key={order.orderId}>
+                <div>
+                  <h3>{order.orderNumber}</h3>
+                  <span>{order.deliveryAddress?.fullName || "Customer"} / {order.deliveryAddress?.city || "Ghana"}</span>
+                  <small>{order.deliveryAddress?.phone || "No phone"}</small>
+                </div>
+                <strong>{formatMoney(order.total, order.currency)}</strong>
+                <div className="seller-state">
+                  <span className={order.paymentStatus === "PAID" ? "state-public" : "state-hidden"}>{formatStatus(order.paymentStatus)}</span>
+                  <small>{formatStatus(order.deliveryStatus)}</small>
+                </div>
+                <div className="order-actions">
+                  <button className="ghost-btn" disabled={updatingOrder === order.orderId || order.paymentStatus === "PAID"} onClick={() => moveOrder(order, { status: "PAID", paymentStatus: "PAID" })}>Mark paid</button>
+                  <button className="ghost-btn" disabled={updatingOrder === order.orderId} onClick={() => moveOrder(order, { status: "PACKED", deliveryStatus: "PACKED" })}>Packed</button>
+                  <button className="ghost-btn" disabled={updatingOrder === order.orderId} onClick={() => moveOrder(order, { status: "OUT_FOR_DELIVERY", deliveryStatus: "OUT_FOR_DELIVERY" })}>Out</button>
+                  <button className="ghost-btn" disabled={updatingOrder === order.orderId} onClick={() => moveOrder(order, { status: "DELIVERED", deliveryStatus: "DELIVERED" })}>Delivered</button>
+                </div>
+              </article>
+            ))}
+            {ordersStatus === "loading" ? <p className="seller-empty">Loading orders...</p> : null}
+            {ordersStatus === "ready" && orders.length === 0 ? <p className="seller-empty">No orders yet.</p> : null}
+          </div>
+        </section>
           </>
         )}
         </div>
@@ -1289,6 +1368,7 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
+    email: "",
     city: "Accra",
     deliveryMethod: "Door delivery",
     paymentMethod: "MOBILE_MONEY",
@@ -1320,7 +1400,7 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const canSubmit = Boolean(quote?.checkoutAllowed && form.fullName.trim() && form.phone.trim() && form.addressLine.trim());
+  const canSubmit = Boolean(quote?.checkoutAllowed && form.fullName.trim() && form.phone.trim() && form.email.trim() && form.addressLine.trim());
 
   const submitOrder = async (event) => {
     event.preventDefault();
@@ -1363,6 +1443,10 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
               <label>
                 Phone
                 <input value={form.phone} onChange={updateField("phone")} placeholder="024 000 0000" />
+              </label>
+              <label>
+                Email
+                <input value={form.email} onChange={updateField("email")} type="email" placeholder="you@example.com" />
               </label>
               <label>
                 City
@@ -1424,7 +1508,7 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
             <button className="checkout-btn" type="submit" disabled={!canSubmit || submitState === "submitting"}>
               {submitState === "submitting" ? "Creating order..." : "Create order"} <ArrowRight size={17} />
             </button>
-            {!canSubmit ? <p className="checkout-hint">Add name, phone, and delivery address to continue.</p> : null}
+            {!canSubmit ? <p className="checkout-hint">Add name, phone, email, and delivery address to continue.</p> : null}
           </aside>
         </form>
       </section>
@@ -1452,7 +1536,7 @@ function OrderConfirmationPage({ order, onBrowse, onTrack }) {
     if (!payment?.providerReference || paymentState === "confirming") return;
     setPaymentState("confirming");
     try {
-      const result = await confirmSandboxPayment(payment.providerReference);
+      const result = await verifyPaymentReference(payment.providerReference, payment.provider ?? "PAYSTACK");
       setPayment(result);
       setPaymentState("paid");
     } catch {
@@ -1473,7 +1557,7 @@ function OrderConfirmationPage({ order, onBrowse, onTrack }) {
           <ShieldCheck size={46} />
           <span>{paymentState === "paid" ? "Payment confirmed" : "Order created"}</span>
           <h1>{order?.orderNumber ?? "YINILOW ORDER"}</h1>
-          <p>Your order is reserved and waiting for payment. This sandbox flow uses the same initialize and callback shape needed for the real provider.</p>
+          <p>Your order is reserved and waiting for payment. Start Paystack checkout, complete the test payment, then return here to verify the reference.</p>
         </div>
         <div className="receipt-card">
           <div>
@@ -1491,7 +1575,7 @@ function OrderConfirmationPage({ order, onBrowse, onTrack }) {
         </div>
         <section className="payment-action-panel">
           <h2>Payment</h2>
-          <p>{payment?.providerReference ? `Reference ${payment.providerReference}` : "Start a sandbox payment attempt for this order."}</p>
+          <p>{payment?.providerReference ? `Reference ${payment.providerReference}` : "Start a Paystack payment attempt for this order."}</p>
           {paymentState === "paid" ? (
             <span><ShieldCheck size={18} /> Payment confirmed</span>
           ) : (
@@ -1499,8 +1583,11 @@ function OrderConfirmationPage({ order, onBrowse, onTrack }) {
               <button className="dark-btn" onClick={startPayment} disabled={paymentState === "starting"}>
                 {paymentState === "starting" ? "Starting..." : "Start payment"} <ArrowRight size={17} />
               </button>
+              {payment?.authorizationUrl ? (
+                <a className="paystack-link" href={payment.authorizationUrl} target="_blank" rel="noreferrer">Open Paystack <ArrowRight size={17} /></a>
+              ) : null}
               <button className="checkout-btn" onClick={confirmPayment} disabled={!payment || paymentState === "confirming"}>
-                {paymentState === "confirming" ? "Confirming..." : "Confirm sandbox payment"} <ShieldCheck size={17} />
+                {paymentState === "confirming" ? "Verifying..." : "Verify payment"} <ShieldCheck size={17} />
               </button>
             </div>
           )}
@@ -1541,6 +1628,11 @@ function OrderTrackingPage({ initialOrder, onBrowse }) {
       const found = await getOrder(form.orderNumber.trim(), form.phone.trim());
       setOrder(found);
       setStatus("ready");
+      recordRealtimeTelemetry({
+        type: "order-tracking",
+        roomId: "dig-pile-main",
+        metadata: { label: "order lookup", state: found.status, at: Date.now() },
+      });
     } catch {
       setOrder(null);
       setStatus("error");

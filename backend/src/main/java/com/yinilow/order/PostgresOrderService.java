@@ -85,6 +85,100 @@ public class PostgresOrderService implements OrderManager {
     }
   }
 
+  @Override
+  public JsonArray adminOrders(String sellerId) {
+    try (Connection connection = database.connection();
+         var statement = connection.prepareStatement("""
+      SELECT DISTINCT ord.id::text,
+        ord.order_number,
+        ord.status,
+        ord.payment_status,
+        ord.delivery_status,
+        ord.total,
+        ord.delivery_address,
+        ord.created_at
+      FROM orders.orders ord
+      JOIN orders.order_items item ON item.order_id = ord.id
+      JOIN catalog.product_listings listing ON listing.id = item.listing_id
+      WHERE listing.seller_account_id = ?::uuid
+      ORDER BY ord.created_at DESC
+      LIMIT 100
+      """)) {
+      statement.setString(1, sellerId);
+      JsonArray orders = new JsonArray();
+      try (ResultSet rows = statement.executeQuery()) {
+        while (rows.next()) {
+          String orderId = rows.getString("id");
+          orders.add(new JsonObject()
+            .put("orderId", orderId)
+            .put("orderNumber", rows.getString("order_number"))
+            .put("status", rows.getString("status"))
+            .put("paymentStatus", rows.getString("payment_status"))
+            .put("deliveryStatus", rows.getString("delivery_status"))
+            .put("total", rows.getBigDecimal("total"))
+            .put("currency", "GHS")
+            .put("deliveryAddress", new JsonObject(rows.getString("delivery_address")))
+            .put("createdAt", rows.getString("created_at"))
+            .put("items", orderItems(connection, orderId)));
+        }
+      }
+      return orders;
+    } catch (SQLException exception) {
+      throw new IllegalStateException("Could not load seller orders", exception);
+    }
+  }
+
+  @Override
+  public OrderResult updateOrderStatus(String orderId, JsonObject request, String sellerId) {
+    String status = normalizeStatus(request.getString("status"));
+    String paymentStatus = normalizePaymentStatus(request.getString("paymentStatus"));
+    String deliveryStatus = normalizeDeliveryStatus(request.getString("deliveryStatus"));
+    if (status == null && paymentStatus == null && deliveryStatus == null) {
+      return OrderResult.failure(400, "ORDER_STATUS_REQUIRED");
+    }
+
+    try (Connection connection = database.connection()) {
+      if (!sellerOwnsOrder(connection, orderId, sellerId)) {
+        return OrderResult.failure(404, "ORDER_NOT_FOUND");
+      }
+      try (var statement = connection.prepareStatement("""
+        UPDATE orders.orders
+        SET status = COALESCE(?, status),
+          payment_status = COALESCE(?, payment_status),
+          delivery_status = COALESCE(?, delivery_status)
+        WHERE id = ?::uuid
+        RETURNING id::text, order_number, status, payment_status, delivery_status, subtotal, service_fee, delivery_fee, total, delivery_address, created_at
+        """)) {
+        statement.setString(1, status);
+        statement.setString(2, paymentStatus);
+        statement.setString(3, deliveryStatus);
+        statement.setString(4, orderId);
+        try (ResultSet row = statement.executeQuery()) {
+          if (!row.next()) {
+            return OrderResult.failure(404, "ORDER_NOT_FOUND");
+          }
+          JsonObject order = new JsonObject()
+            .put("orderId", row.getString("id"))
+            .put("orderNumber", row.getString("order_number"))
+            .put("status", row.getString("status"))
+            .put("paymentStatus", row.getString("payment_status"))
+            .put("deliveryStatus", row.getString("delivery_status"))
+            .put("subtotal", row.getBigDecimal("subtotal"))
+            .put("serviceFee", row.getBigDecimal("service_fee"))
+            .put("deliveryFee", row.getBigDecimal("delivery_fee"))
+            .put("total", row.getBigDecimal("total"))
+            .put("currency", "GHS")
+            .put("deliveryAddress", new JsonObject(row.getString("delivery_address")))
+            .put("createdAt", row.getString("created_at"))
+            .put("items", orderItems(connection, orderId));
+          return new OrderResult(true, 200, order);
+        }
+      }
+    } catch (SQLException exception) {
+      throw new IllegalStateException("Could not update order status", exception);
+    }
+  }
+
   private static void expireOldHolds(Connection connection) throws SQLException {
     try (var statement = connection.prepareStatement("""
       UPDATE inventory.inventory_holds
@@ -269,5 +363,45 @@ public class PostgresOrderService implements OrderManager {
       }
       return items;
     }
+  }
+
+  private static boolean sellerOwnsOrder(Connection connection, String orderId, String sellerId) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+      SELECT 1
+      FROM orders.order_items item
+      JOIN catalog.product_listings listing ON listing.id = item.listing_id
+      WHERE item.order_id = ?::uuid AND listing.seller_account_id = ?::uuid
+      LIMIT 1
+      """)) {
+      statement.setString(1, orderId);
+      statement.setString(2, sellerId);
+      try (ResultSet row = statement.executeQuery()) {
+        return row.next();
+      }
+    }
+  }
+
+  private static String normalizeStatus(String value) {
+    if (value == null || value.isBlank()) return null;
+    return switch (value) {
+      case "PAYMENT_PENDING", "PAID", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED" -> value;
+      default -> null;
+    };
+  }
+
+  private static String normalizePaymentStatus(String value) {
+    if (value == null || value.isBlank()) return null;
+    return switch (value) {
+      case "PENDING", "PAID", "FAILED", "REFUNDED" -> value;
+      default -> null;
+    };
+  }
+
+  private static String normalizeDeliveryStatus(String value) {
+    if (value == null || value.isBlank()) return null;
+    return switch (value) {
+      case "NOT_STARTED", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED", "RETURNED" -> value;
+      default -> null;
+    };
   }
 }
