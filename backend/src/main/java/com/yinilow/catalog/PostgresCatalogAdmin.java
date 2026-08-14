@@ -18,7 +18,7 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
   }
 
   @Override
-  public JsonArray adminListings() {
+  public JsonArray adminListings(String sellerId) {
     String sql = """
       SELECT
         listing.public_code,
@@ -52,12 +52,14 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
         ORDER BY purpose = 'PRIMARY' DESC, created_at ASC
         LIMIT 1
       ) media ON true
+      WHERE listing.seller_account_id = ?::uuid
       ORDER BY listing.created_at DESC
       """;
 
     try (Connection connection = database.connection();
-         var statement = connection.prepareStatement(sql);
-         ResultSet rows = statement.executeQuery()) {
+         var statement = connection.prepareStatement(sql)) {
+      statement.setString(1, sellerId);
+      try (ResultSet rows = statement.executeQuery()) {
       JsonArray listings = new JsonArray();
       while (rows.next()) {
         String itemStatus = rows.getString("item_status");
@@ -80,13 +82,14 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
           .put("publishedAt", rows.getString("published_at")));
       }
       return listings;
+      }
     } catch (SQLException exception) {
       throw new IllegalStateException("Could not load admin listings", exception);
     }
   }
 
   @Override
-  public CreateListingResult createListing(JsonObject request) {
+  public CreateListingResult createListing(JsonObject request, String sellerId) {
     String title = clean(request.getString("title"));
     String category = clean(request.getString("category", "New Drop"));
     BigDecimal price = amount(request.getValue("price"));
@@ -103,7 +106,7 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
       String unitCode = uniqueCode("unit", title);
       String listingCode = uniqueCode("lst", title);
       String itemUnitId = createItemUnit(connection, request, unitCode);
-      String listingId = createProductListing(connection, request, listingCode, title, slug(listingCode), categoryId, price);
+      String listingId = createProductListing(connection, request, listingCode, title, slug(listingCode), categoryId, price, sellerId);
       linkListingUnit(connection, listingId, itemUnitId);
       createImage(connection, itemUnitId, request.getString("imageUrl", "/assets/prod-tee.jpg"));
       createMeasurements(connection, itemUnitId, request.getJsonObject("measurements", new JsonObject()));
@@ -122,7 +125,7 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
   }
 
   @Override
-  public CreateListingResult updateVisibility(String listingId, JsonObject request) {
+  public CreateListingResult updateVisibility(String listingId, JsonObject request, String sellerId) {
     String visibility = clean(request.getString("visibility", "PUBLIC")).toUpperCase(Locale.ROOT);
     if (!visibility.equals("PUBLIC") && !visibility.equals("HIDDEN")) {
       return CreateListingResult.failure(400, "VISIBILITY_NOT_ALLOWED");
@@ -132,12 +135,13 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
          var statement = connection.prepareStatement("""
            UPDATE catalog.product_listings
            SET visibility = ?, published_at = CASE WHEN ? = 'PUBLIC' THEN COALESCE(published_at, now()) ELSE published_at END, updated_at = now()
-           WHERE public_code = ?
+           WHERE public_code = ? AND seller_account_id = ?::uuid
            RETURNING public_code, title, visibility
            """)) {
       statement.setString(1, visibility);
       statement.setString(2, visibility);
       statement.setString(3, listingId);
+      statement.setString(4, sellerId);
       try (ResultSet row = statement.executeQuery()) {
         if (!row.next()) {
           return CreateListingResult.failure(404, "LISTING_NOT_FOUND");
@@ -195,14 +199,15 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
     String title,
     String slug,
     String categoryId,
-    BigDecimal price
+    BigDecimal price,
+    String sellerId
   ) throws SQLException {
     try (var statement = connection.prepareStatement("""
       INSERT INTO catalog.product_listings (
         public_code, title, slug, description, category_id, stock_type, pile_eligible, restockable,
-        return_policy_type, visibility, public_price, currency, published_at
+        return_policy_type, visibility, public_price, currency, published_at, seller_account_id
       )
-      VALUES (?, ?, ?, ?, ?::uuid, 'THRIFT_ONE_OFF', ?, false, 'THRIFT_LIMITED_RETURN', 'PUBLIC', ?, 'GHS', now())
+      VALUES (?, ?, ?, ?, ?::uuid, 'THRIFT_ONE_OFF', ?, false, 'THRIFT_LIMITED_RETURN', 'PUBLIC', ?, 'GHS', now(), ?::uuid)
       RETURNING id::text
       """)) {
       statement.setString(1, listingCode);
@@ -212,6 +217,7 @@ public class PostgresCatalogAdmin implements CatalogAdmin {
       statement.setString(5, categoryId);
       statement.setBoolean(6, request.getBoolean("pileEligible", true));
       statement.setBigDecimal(7, price);
+      statement.setString(8, sellerId);
       try (ResultSet row = statement.executeQuery()) {
         row.next();
         return row.getString("id");

@@ -27,6 +27,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
+import java.util.Optional;
 
 public class MainVerticle extends AbstractVerticle {
   private volatile CatalogReader catalog;
@@ -98,28 +99,31 @@ public class MainVerticle extends AbstractVerticle {
       ctx.response().setStatusCode(204).end();
     });
     router.post("/api/v1/admin/catalog/listings").handler(ctx -> {
-      if (!sellerAuth.authenticate(ctx.request().getHeader("authorization")).isPresent()) {
+      Optional<SellerAuthService.SellerSession> session = sellerAuth.authenticate(ctx.request().getHeader("authorization"));
+      if (session.isEmpty()) {
         unauthorized(ctx);
         return;
       }
       JsonObject body = ctx.body().asJsonObject();
-      CatalogAdmin.CreateListingResult result = catalogAdmin.createListing(body == null ? new JsonObject() : body);
+      CatalogAdmin.CreateListingResult result = catalogAdmin.createListing(body == null ? new JsonObject() : body, session.get().sellerId());
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
     router.get("/api/v1/admin/catalog/listings").handler(ctx -> {
-      if (!sellerAuth.authenticate(ctx.request().getHeader("authorization")).isPresent()) {
+      Optional<SellerAuthService.SellerSession> session = sellerAuth.authenticate(ctx.request().getHeader("authorization"));
+      if (session.isEmpty()) {
         unauthorized(ctx);
         return;
       }
-      ctx.json(catalogAdmin.adminListings());
+      ctx.json(catalogAdmin.adminListings(session.get().sellerId()));
     });
     router.patch("/api/v1/admin/catalog/listings/:id/visibility").handler(ctx -> {
-      if (!sellerAuth.authenticate(ctx.request().getHeader("authorization")).isPresent()) {
+      Optional<SellerAuthService.SellerSession> session = sellerAuth.authenticate(ctx.request().getHeader("authorization"));
+      if (session.isEmpty()) {
         unauthorized(ctx);
         return;
       }
       JsonObject body = ctx.body().asJsonObject();
-      CatalogAdmin.CreateListingResult result = catalogAdmin.updateVisibility(ctx.pathParam("id"), body == null ? new JsonObject() : body);
+      CatalogAdmin.CreateListingResult result = catalogAdmin.updateVisibility(ctx.pathParam("id"), body == null ? new JsonObject() : body, session.get().sellerId());
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
 

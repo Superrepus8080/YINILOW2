@@ -70,6 +70,9 @@ public class DatabaseBootstrap {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         CONSTRAINT seller_accounts_status_check CHECK (status IN ('ACTIVE', 'SUSPENDED'))
       );
+
+      ALTER TABLE catalog.product_listings
+      ADD COLUMN IF NOT EXISTS seller_account_id UUID REFERENCES auth.seller_accounts(id);
       """;
   }
 

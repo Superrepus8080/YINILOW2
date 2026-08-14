@@ -5,12 +5,12 @@ import io.vertx.core.json.JsonObject;
 
 public class MemoryCatalogAdmin implements CatalogAdmin {
   @Override
-  public JsonArray adminListings() {
+  public JsonArray adminListings(String sellerId) {
     return new JsonArray();
   }
 
   @Override
-  public CreateListingResult createListing(JsonObject request) {
+  public CreateListingResult createListing(JsonObject request, String sellerId) {
     if (request.getString("title", "").isBlank()) {
       return CreateListingResult.failure(400, "TITLE_REQUIRED");
     }
@@ -21,7 +21,7 @@ public class MemoryCatalogAdmin implements CatalogAdmin {
   }
 
   @Override
-  public CreateListingResult updateVisibility(String listingId, JsonObject request) {
+  public CreateListingResult updateVisibility(String listingId, JsonObject request, String sellerId) {
     return CreateListingResult.created(new JsonObject()
       .put("listingId", listingId)
       .put("visibility", request.getString("visibility", "PUBLIC")));
