@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Bell,
@@ -60,6 +60,7 @@ import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
 import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, createSellerAccount, getAdminListings, getCart, getListings, getStoredSellerSession, initializePayment, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
+import { createRealtimeDataChannel } from "./realtime";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -1295,7 +1296,76 @@ function OrderConfirmationPage({ order, onBrowse }) {
   );
 }
 
+function useDigPileRealtime() {
+  const channelRef = useRef(null);
+  const [connectionState, setConnectionState] = useState("connecting");
+  const [viewerCount, setViewerCount] = useState(1);
+  const [latencyMs, setLatencyMs] = useState(null);
+  const [activity, setActivity] = useState("Live pile is warming up");
+
+  useEffect(() => {
+    let mounted = true;
+    const roomId = "dig-pile-main";
+    const pingPrefix = Math.random().toString(36).slice(2);
+
+    try {
+      channelRef.current = createRealtimeDataChannel({
+        roomId,
+        onPeerCount: (count) => {
+          if (mounted) setViewerCount(Math.max(1, Number(count) || 1));
+        },
+        onStateChange: (state) => {
+          if (mounted) setConnectionState(state);
+        },
+        onMessage: (message) => {
+          const payload = message?.payload;
+          if (!payload) return;
+          if (payload.kind === "ping") {
+            channelRef.current?.sendTelemetry({ kind: "pong", id: payload.id, sentAt: payload.sentAt });
+            return;
+          }
+          if (payload.kind === "pong" && payload.id?.startsWith(pingPrefix)) {
+            if (mounted) setLatencyMs(Math.max(1, Date.now() - payload.sentAt));
+            return;
+          }
+          if (payload.kind === "hover-tag" && mounted) {
+            setActivity(`Someone is checking ${payload.label}`);
+          }
+          if (payload.kind === "active" && mounted) {
+            setActivity("People are digging now");
+          }
+        },
+      });
+    } catch {
+      if (mounted) setConnectionState("unavailable");
+    }
+
+    const heartbeat = window.setInterval(() => {
+      channelRef.current?.sendTelemetry({ kind: "active", roomId, at: Date.now() });
+    }, 4500);
+    const latencyProbe = window.setInterval(() => {
+      channelRef.current?.sendTelemetry({ kind: "ping", id: `${pingPrefix}-${Date.now()}`, sentAt: Date.now() });
+    }, 7000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(heartbeat);
+      window.clearInterval(latencyProbe);
+      channelRef.current?.close();
+      channelRef.current = null;
+    };
+  }, []);
+
+  function trackTag(label) {
+    setActivity(`You touched ${label}`);
+    channelRef.current?.sendTelemetry({ kind: "hover-tag", label, at: Date.now() });
+  }
+
+  return { activity, connectionState, latencyMs, trackTag, viewerCount };
+}
+
 function DigPilePage({ onBrowse, onOpenProduct }) {
+  const realtime = useDigPileRealtime();
   const featured = clothingProducts[5];
   const tags = [
     ["GHC55", "pile-tag tag-hat"],
@@ -1321,6 +1391,12 @@ function DigPilePage({ onBrowse, onOpenProduct }) {
           <h1>Dig the Pile</h1>
           <p>Dig deep. Tap anything. Save what you love.</p>
         </div>
+        <div className="pile-live-strip" aria-label="Dig the Pile live status">
+          <span className={`live-dot ${realtime.connectionState}`}></span>
+          <strong>{realtime.viewerCount} live</strong>
+          <span>{realtime.activity}</span>
+          <em>{realtime.latencyMs ? `${realtime.latencyMs}ms` : realtime.connectionState}</em>
+        </div>
         <div className="pile-actions">
           <button className="ghost-btn"><Shuffle size={17} /> Shuffle</button>
           <button className="ghost-btn"><SlidersHorizontal size={17} /> Filter</button>
@@ -1328,7 +1404,15 @@ function DigPilePage({ onBrowse, onOpenProduct }) {
         <div className="pile-stage" aria-label="Interactive thrift pile">
           <img src={digPileReference} alt="YINILOW thrift pile with tagged clothing" />
           {tags.map(([label, className]) => (
-            <button key={className} className={className}>{label}</button>
+            <button
+              key={className}
+              className={className}
+              onFocus={() => realtime.trackTag(label)}
+              onMouseEnter={() => realtime.trackTag(label)}
+              onClick={() => realtime.trackTag(label)}
+            >
+              {label}
+            </button>
           ))}
           <article className="pile-quick-card">
             <h2>{featured.name}</h2>

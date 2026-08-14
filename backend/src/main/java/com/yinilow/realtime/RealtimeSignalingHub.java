@@ -38,6 +38,7 @@ public class RealtimeSignalingHub {
       .put("peerId", peerId)
       .put("roomId", roomId)
       .encode());
+    broadcastPeerCount(roomId);
 
     socket.textMessageHandler(message -> relay(roomId, peerId, socket, message));
     socket.closeHandler(ignored -> leave(roomId, socket));
@@ -84,6 +85,21 @@ public class RealtimeSignalingHub {
     peers.remove(socket);
     if (peers.isEmpty()) {
       rooms.remove(roomId, peers);
+      return;
+    }
+    broadcastPeerCount(roomId);
+  }
+
+  private void broadcastPeerCount(String roomId) {
+    Set<ServerWebSocket> peers = rooms.getOrDefault(roomId, Set.of());
+    JsonObject payload = new JsonObject()
+      .put("type", "peer-count")
+      .put("roomId", roomId)
+      .put("count", peers.size());
+    for (ServerWebSocket peer : peers) {
+      if (!peer.isClosed()) {
+        peer.writeTextMessage(payload.encode());
+      }
     }
   }
 }

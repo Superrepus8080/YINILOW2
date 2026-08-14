@@ -1,6 +1,6 @@
 const API_BASE = import.meta.env.VITE_YINILOW_API_BASE ?? "";
 
-export function createRealtimeDataChannel({ roomId, initiator = false, onMessage, onStateChange } = {}) {
+export function createRealtimeDataChannel({ roomId, onMessage, onPeerCount, onStateChange } = {}) {
   if (!roomId) {
     throw new Error("REALTIME_ROOM_REQUIRED");
   }
@@ -12,7 +12,11 @@ export function createRealtimeDataChannel({ roomId, initiator = false, onMessage
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
   });
   const socket = new WebSocket(signalingUrl(roomId));
+  const queuedSignals = [];
+  const pendingCandidates = [];
   let channel = null;
+  let makingOffer = false;
+  let peerId = "";
 
   function setState(state) {
     onStateChange?.(state);
@@ -29,44 +33,88 @@ export function createRealtimeDataChannel({ roomId, initiator = false, onMessage
     };
   }
 
-  if (initiator) {
-    attachChannel(peer.createDataChannel("yinilow.telemetry", {
-      ordered: false,
-      maxRetransmits: 0,
-    }));
-  } else {
-    peer.ondatachannel = (event) => attachChannel(event.channel);
+  function emitSignal(payload) {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(payload));
+      return;
+    }
+    queuedSignals.push(payload);
   }
+
+  attachChannel(peer.createDataChannel("yinilow.telemetry", {
+    ordered: false,
+    maxRetransmits: 0,
+  }));
+  peer.ondatachannel = (event) => attachChannel(event.channel);
+
+  peer.onnegotiationneeded = async () => {
+    try {
+      makingOffer = true;
+      await peer.setLocalDescription();
+      emitSignal({ type: "offer", description: peer.localDescription });
+    } finally {
+      makingOffer = false;
+    }
+  };
 
   peer.onicecandidate = (event) => {
     if (event.candidate) {
-      sendSignal(socket, { type: "ice", candidate: event.candidate });
+      emitSignal({ type: "ice", candidate: event.candidate });
     }
   };
 
   socket.onopen = async () => {
     setState("signaling");
-    sendSignal(socket, { type: "ready" });
-    if (initiator) {
-      const offer = await peer.createOffer();
-      await peer.setLocalDescription(offer);
-      sendSignal(socket, { type: "offer", description: peer.localDescription });
+    emitSignal({ type: "ready" });
+    for (const signal of queuedSignals.splice(0)) {
+      emitSignal(signal);
     }
   };
 
   socket.onmessage = async (event) => {
     const signal = JSON.parse(event.data);
-    if (signal.type === "offer") {
-      await peer.setRemoteDescription(signal.description);
-      const answer = await peer.createAnswer();
-      await peer.setLocalDescription(answer);
-      sendSignal(socket, { type: "answer", description: peer.localDescription });
+    if (signal.type === "joined") {
+      peerId = signal.peerId;
+      return;
     }
-    if (signal.type === "answer") {
+    if (signal.type === "peer-count") {
+      onPeerCount?.(signal.count);
+      return;
+    }
+    if (signal.type === "offer") {
+      const polite = peerId && signal.fromPeerId ? peerId > signal.fromPeerId : true;
+      const offerCollision = makingOffer || peer.signalingState !== "stable";
+      if (!polite && offerCollision) {
+        return;
+      }
+      if (offerCollision) {
+        await Promise.all([
+          peer.setLocalDescription({ type: "rollback" }),
+          peer.setRemoteDescription(signal.description),
+        ]);
+      } else {
+        await peer.setRemoteDescription(signal.description);
+      }
+      for (const candidate of pendingCandidates.splice(0)) {
+        await peer.addIceCandidate(candidate);
+      }
+      await peer.setLocalDescription();
+      emitSignal({ type: "answer", description: peer.localDescription });
+      return;
+    }
+    if (signal.type === "answer" && peer.signalingState !== "stable") {
       await peer.setRemoteDescription(signal.description);
+      for (const candidate of pendingCandidates.splice(0)) {
+        await peer.addIceCandidate(candidate);
+      }
+      return;
     }
     if (signal.type === "ice" && signal.candidate) {
-      await peer.addIceCandidate(signal.candidate);
+      if (peer.remoteDescription) {
+        await peer.addIceCandidate(signal.candidate);
+      } else {
+        pendingCandidates.push(signal.candidate);
+      }
     }
   };
 
@@ -100,12 +148,6 @@ function signalingUrl(roomId) {
   url.pathname = `/api/v1/realtime/signaling/${encodeURIComponent(roomId)}`;
   url.search = "";
   return url.toString();
-}
-
-function sendSignal(socket, payload) {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(payload));
-  }
 }
 
 function decodePayload(data) {

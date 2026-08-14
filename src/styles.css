@@ -2037,6 +2037,69 @@ button {
   font-weight: 500;
 }
 
+.pile-live-strip {
+  min-height: 48px;
+  margin: 0 0 18px;
+  border: 1px solid #e7dfd3;
+  border-radius: 8px;
+  background: #fffdfa;
+  display: grid;
+  grid-template-columns: 12px auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  box-shadow: 0 8px 24px rgba(23, 18, 10, .045);
+}
+
+.pile-live-strip strong,
+.pile-live-strip span,
+.pile-live-strip em {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.pile-live-strip strong {
+  text-transform: uppercase;
+  font-weight: 950;
+}
+
+.pile-live-strip span:not(.live-dot) {
+  color: #423c34;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pile-live-strip em {
+  justify-self: end;
+  border-radius: 6px;
+  background: #f0ebe4;
+  padding: 6px 9px;
+  color: #191611;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #beb7ad;
+}
+
+.live-dot.open,
+.live-dot.signaling {
+  background: #17a64a;
+  box-shadow: 0 0 0 4px rgba(23, 166, 74, .12);
+}
+
+.live-dot.error,
+.live-dot.unavailable {
+  background: #d73324;
+  box-shadow: 0 0 0 4px rgba(215, 51, 36, .12);
+}
+
 .pile-actions {
   display: flex;
   justify-content: end;
@@ -3361,6 +3424,17 @@ button {
   .drop-hero p {
     margin-bottom: 0;
     font-size: 15px;
+  }
+
+  .pile-live-strip {
+    grid-template-columns: 10px auto 1fr;
+    min-height: auto;
+    padding: 12px;
+  }
+
+  .pile-live-strip em {
+    grid-column: 2 / -1;
+    justify-self: start;
   }
 
   .pile-actions,
