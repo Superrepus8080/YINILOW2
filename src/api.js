@@ -64,10 +64,19 @@ export function clearSellerSession() {
   window.localStorage.removeItem(SELLER_SESSION_KEY);
 }
 
-export async function sellerLogin(pin) {
+export async function sellerLogin(credentials) {
   const session = await request("/api/v1/seller/sessions", {
     method: "POST",
-    body: JSON.stringify({ pin }),
+    body: JSON.stringify(credentials),
+  });
+  storeSellerSession(session);
+  return session;
+}
+
+export async function createSellerAccount(account) {
+  const session = await request("/api/v1/seller/accounts", {
+    method: "POST",
+    body: JSON.stringify(account),
   });
   storeSellerSession(session);
   return session;

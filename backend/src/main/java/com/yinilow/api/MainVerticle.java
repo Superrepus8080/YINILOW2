@@ -88,6 +88,11 @@ public class MainVerticle extends AbstractVerticle {
       SellerAuthService.AuthResult result = sellerAuth.login(body == null ? new JsonObject() : body);
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
+    router.post("/api/v1/seller/accounts").handler(ctx -> {
+      JsonObject body = ctx.body().asJsonObject();
+      SellerAuthService.AuthResult result = sellerAuth.register(body == null ? new JsonObject() : body);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
     router.delete("/api/v1/seller/session").handler(ctx -> {
       sellerAuth.logout(ctx.request().getHeader("authorization"));
       ctx.response().setStatusCode(204).end();
@@ -180,6 +185,7 @@ public class MainVerticle extends AbstractVerticle {
     vertx.executeBlocking(() -> {
       Database database = new Database(config);
       new DatabaseBootstrap(database).migrateAndSeed();
+      sellerAuth.useDatabase(database);
       CatalogReader postgresCatalog = new PostgresCatalogService(database);
       CatalogAdmin postgresCatalogAdmin = new PostgresCatalogAdmin(database);
       HoldManager postgresHolds = new PostgresHoldService(database);

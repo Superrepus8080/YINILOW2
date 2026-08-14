@@ -1435,6 +1435,33 @@ button {
   font-weight: 650;
 }
 
+.seller-auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  border: 1px solid #eee7dd;
+  border-radius: 10px;
+  background: #fff;
+  padding: 5px;
+}
+
+.seller-auth-tabs button {
+  height: 38px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #433a31;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.seller-auth-tabs button.selected {
+  background: #ffd000;
+  color: #111;
+}
+
 .seller-form label,
 .seller-login label {
   display: grid;

@@ -57,6 +57,19 @@ public class DatabaseBootstrap {
 
       ALTER TABLE orders.orders
       ADD COLUMN IF NOT EXISTS delivery_address JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+      CREATE SCHEMA IF NOT EXISTS auth;
+
+      CREATE TABLE IF NOT EXISTS auth.seller_accounts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ACTIVE',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        CONSTRAINT seller_accounts_status_check CHECK (status IN ('ACTIVE', 'SUSPENDED'))
+      );
       """;
   }
 

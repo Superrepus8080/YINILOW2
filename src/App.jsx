@@ -58,7 +58,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, getAdminListings, getCart, getListings, getStoredSellerSession, initializePayment, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
+import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, createSellerAccount, getAdminListings, getCart, getListings, getStoredSellerSession, initializePayment, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -585,7 +585,12 @@ function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, cloth
 
 function SellerConsolePage({ onCreated, refreshListings }) {
   const [sellerSession, setSellerSession] = useState(() => getStoredSellerSession());
-  const [pin, setPin] = useState("");
+  const [authMode, setAuthMode] = useState("signin");
+  const [authForm, setAuthForm] = useState({
+    displayName: "YINILOW Seller",
+    email: "seller@yinilow.local",
+    password: "yinilow-demo",
+  });
   const [loginStatus, setLoginStatus] = useState("idle");
   const [form, setForm] = useState({
     title: "Fresh Y2K denim jacket",
@@ -641,6 +646,10 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
+  const updateAuthField = (field) => (event) => {
+    setAuthForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
   const toggleVisibility = async (listing) => {
     const nextVisibility = listing.visibility === "PUBLIC" ? "HIDDEN" : "PUBLIC";
     setUpdatingListing(listing.listingId);
@@ -656,10 +665,11 @@ function SellerConsolePage({ onCreated, refreshListings }) {
     event.preventDefault();
     setLoginStatus("checking");
     try {
-      const session = await sellerLogin(pin);
+      const session = authMode === "create"
+        ? await createSellerAccount(authForm)
+        : await sellerLogin({ email: authForm.email, password: authForm.password });
       setSellerSession(session);
       setLoginStatus("idle");
-      setPin("");
     } catch (error) {
       setLoginStatus("error");
     }
@@ -716,24 +726,38 @@ function SellerConsolePage({ onCreated, refreshListings }) {
         <div className="seller-heading">
           <span>Seller console</span>
           <h1>Manage live clothing stock</h1>
-          <p>{sellerSession ? `Signed in as ${sellerSession.displayName}` : "Enter the seller access PIN to publish and manage stock."}</p>
+          <p>{sellerSession ? `Signed in as ${sellerSession.displayName}` : "Sign in or create a seller account to publish and manage stock."}</p>
           {sellerSession ? <button className="ghost-btn" onClick={logoutSeller}>Sign out</button> : null}
         </div>
         {!sellerSession ? (
           <form className="seller-login" onSubmit={submitLogin}>
             <div>
               <span>Protected access</span>
-              <h2>Seller sign in</h2>
-              <p>This keeps product publishing and inventory controls away from public shoppers.</p>
+              <h2>{authMode === "create" ? "Create seller account" : "Seller sign in"}</h2>
+              <p>Use the demo seller or create a new account for the console.</p>
             </div>
+            <div className="seller-auth-tabs">
+              <button type="button" className={authMode === "signin" ? "selected" : ""} onClick={() => setAuthMode("signin")}>Sign in</button>
+              <button type="button" className={authMode === "create" ? "selected" : ""} onClick={() => setAuthMode("create")}>Create account</button>
+            </div>
+            {authMode === "create" ? (
+              <label>
+                Display name
+                <input value={authForm.displayName} onChange={updateAuthField("displayName")} placeholder="Seller name" />
+              </label>
+            ) : null}
             <label>
-              Seller PIN
-              <input value={pin} onChange={(event) => setPin(event.target.value)} type="password" placeholder="Enter seller PIN" />
+              Email
+              <input value={authForm.email} onChange={updateAuthField("email")} type="email" placeholder="seller@example.com" />
+            </label>
+            <label>
+              Password
+              <input value={authForm.password} onChange={updateAuthField("password")} type="password" placeholder="At least 6 characters" />
             </label>
             <button className="dark-btn" disabled={loginStatus === "checking"}>
-              {loginStatus === "checking" ? "Checking..." : "Enter console"} <ArrowRight size={17} />
+              {loginStatus === "checking" ? "Checking..." : authMode === "create" ? "Create and enter" : "Enter console"} <ArrowRight size={17} />
             </button>
-            {loginStatus === "error" ? <p className="hold-message warning">That PIN did not work.</p> : null}
+            {loginStatus === "error" ? <p className="hold-message warning">Those seller details did not work.</p> : null}
           </form>
         ) : (
           <>
