@@ -20,6 +20,7 @@ public class DatabaseBootstrap {
       if (!schemaExists(connection)) {
         runSql(connection, migrationSql());
       }
+      runSql(connection, compatibilitySql());
       runSql(connection, seedSql());
     } catch (SQLException | IOException exception) {
       throw new IllegalStateException("Database bootstrap failed", exception);
@@ -47,6 +48,16 @@ public class DatabaseBootstrap {
       }
       return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
     }
+  }
+
+  private static String compatibilitySql() {
+    return """
+      ALTER TABLE orders.orders
+      ALTER COLUMN user_id DROP NOT NULL;
+
+      ALTER TABLE orders.orders
+      ADD COLUMN IF NOT EXISTS delivery_address JSONB NOT NULL DEFAULT '{}'::jsonb;
+      """;
   }
 
   private static String seedSql() {
