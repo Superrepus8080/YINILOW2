@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MemoryOrderService implements OrderManager {
   private final CartService carts;
   private final Map<String, JsonObject> idempotencyResponses = new ConcurrentHashMap<>();
+  private final Map<String, JsonObject> ordersByNumber = new ConcurrentHashMap<>();
 
   public MemoryOrderService(CartService carts) {
     this.carts = carts;
@@ -29,11 +30,29 @@ public class MemoryOrderService implements OrderManager {
       .put("status", "PAYMENT_PENDING")
       .put("paymentStatus", "PENDING")
       .put("deliveryStatus", "NOT_STARTED")
+      .put("deliveryAddress", request.getJsonObject("deliveryAddress", new JsonObject()))
       .put("total", quote.getValue("total"))
       .put("currency", quote.getString("currency"));
     if (idempotencyKey != null) {
       idempotencyResponses.put(idempotencyKey, payload);
     }
+    ordersByNumber.put(payload.getString("orderNumber").toUpperCase(), payload);
     return OrderResult.success(payload);
+  }
+
+  @Override
+  public OrderResult getOrder(String orderNumber, String phone) {
+    if (orderNumber == null || orderNumber.isBlank() || phone == null || phone.isBlank()) {
+      return OrderResult.failure(400, "ORDER_NUMBER_AND_PHONE_REQUIRED");
+    }
+    JsonObject order = ordersByNumber.get(orderNumber.trim().toUpperCase());
+    if (order == null) {
+      return OrderResult.failure(404, "ORDER_NOT_FOUND");
+    }
+    String storedPhone = order.getJsonObject("deliveryAddress", new JsonObject()).getString("phone", "");
+    if (!storedPhone.replaceAll("\\s+", "").equals(phone.replaceAll("\\s+", ""))) {
+      return OrderResult.failure(404, "ORDER_NOT_FOUND");
+    }
+    return new OrderResult(true, 200, order.copy());
   }
 }

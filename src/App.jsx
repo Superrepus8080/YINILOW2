@@ -78,7 +78,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, createSellerAccount, getAdminListings, getCart, getListings, getStoredSellerSession, initializePayment, recordRealtimeTelemetry, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
+import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, createSellerAccount, getAdminListings, getCart, getListings, getOrder, getStoredSellerSession, initializePayment, recordRealtimeTelemetry, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
 import { createRealtimeDataChannel } from "./realtime";
 
 const catalogProductImages = {
@@ -215,6 +215,11 @@ function formatMoney(value, currency = "GHS") {
   return `${currency} ${amount.toFixed(2)}`;
 }
 
+function formatStatus(value) {
+  if (!value) return "Pending";
+  return value.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 function secondsUntil(value) {
   if (!value) return 0;
   return Math.max(0, Math.floor((new Date(value).getTime() - Date.now()) / 1000));
@@ -262,7 +267,7 @@ function Logo() {
   );
 }
 
-function Header({ active, setActive, cartCount = 0, onCart, onSeller }) {
+function Header({ active, setActive, cartCount = 0, onCart, onSeller, onTrack }) {
   const isHome = active === "home";
   return (
     <header className="topbar">
@@ -300,6 +305,9 @@ function Header({ active, setActive, cartCount = 0, onCart, onSeller }) {
         </button>
         <button>
           <User size={22} /> Account
+        </button>
+        <button onClick={onTrack}>
+          <Truck size={22} /> Track
         </button>
         <button onClick={onSeller}>
           <Package size={22} /> Seller
@@ -1282,6 +1290,8 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
     fullName: "",
     phone: "",
     city: "Accra",
+    deliveryMethod: "Door delivery",
+    paymentMethod: "MOBILE_MONEY",
     addressLine: "",
     notes: "",
   });
@@ -1317,7 +1327,7 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
     if (!canSubmit || submitState === "submitting") return;
     setSubmitState("submitting");
     try {
-      const order = await createOrder(form);
+      const order = await createOrder(form, form.paymentMethod);
       refreshCartCount(0);
       setSubmitState("created");
       onOrderCreated(order);
@@ -1359,6 +1369,14 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
                 <input value={form.city} onChange={updateField("city")} placeholder="Accra" />
               </label>
               <label>
+                Delivery type
+                <select value={form.deliveryMethod} onChange={updateField("deliveryMethod")}>
+                  <option>Door delivery</option>
+                  <option>Pickup point</option>
+                  <option>Seller meetup</option>
+                </select>
+              </label>
+              <label>
                 Delivery address
                 <input value={form.addressLine} onChange={updateField("addressLine")} placeholder="Street, area, landmark" />
               </label>
@@ -1373,9 +1391,9 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
                 <strong>Payment method</strong>
                 <span>Choose how the customer will complete payment after the order is created.</span>
                 <div className="payment-methods" aria-label="Payment methods">
-                  <button type="button" className="selected"><Lightning size={15} /> Mobile money</button>
-                  <button type="button"><Lock size={15} /> Card</button>
-                  <button type="button"><ShieldCheck size={15} /> Sandbox</button>
+                  <button type="button" className={form.paymentMethod === "MOBILE_MONEY" ? "selected" : ""} onClick={() => setForm((current) => ({ ...current, paymentMethod: "MOBILE_MONEY" }))}><Lightning size={15} /> Mobile money</button>
+                  <button type="button" className={form.paymentMethod === "CARD" ? "selected" : ""} onClick={() => setForm((current) => ({ ...current, paymentMethod: "CARD" }))}><Lock size={15} /> Card</button>
+                  <button type="button" className={form.paymentMethod === "SANDBOX" ? "selected" : ""} onClick={() => setForm((current) => ({ ...current, paymentMethod: "SANDBOX" }))}><ShieldCheck size={15} /> Sandbox</button>
                 </div>
               </div>
             </div>
@@ -1414,7 +1432,7 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
   );
 }
 
-function OrderConfirmationPage({ order, onBrowse }) {
+function OrderConfirmationPage({ order, onBrowse, onTrack }) {
   const [payment, setPayment] = useState(null);
   const [paymentState, setPaymentState] = useState(order?.paymentStatus === "PAID" ? "paid" : "idle");
 
@@ -1488,7 +1506,111 @@ function OrderConfirmationPage({ order, onBrowse }) {
           )}
           {paymentState === "error" ? <p className="hold-message warning">Payment step failed. Please try again.</p> : null}
         </section>
-        <button className="ghost-btn" onClick={() => onBrowse("New Drop")}>Continue shopping <ArrowRight size={17} /></button>
+        <div className="confirmation-actions">
+          <button className="dark-btn" onClick={() => onTrack(order)}>Track order <Truck size={17} /></button>
+          <button className="ghost-btn" onClick={() => onBrowse("New Drop")}>Continue shopping <ArrowRight size={17} /></button>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function OrderTrackingPage({ initialOrder, onBrowse }) {
+  const [form, setForm] = useState({
+    orderNumber: initialOrder?.orderNumber ?? "",
+    phone: initialOrder?.deliveryAddress?.phone ?? "",
+  });
+  const [order, setOrder] = useState(initialOrder ?? null);
+  const [status, setStatus] = useState(initialOrder ? "ready" : "idle");
+
+  const paymentDone = order?.paymentStatus === "PAID" || order?.status === "PAID";
+  const deliveryStatus = order?.deliveryStatus ?? "NOT_STARTED";
+  const steps = [
+    { label: "Order created", done: Boolean(order), detail: order?.orderNumber ?? "Waiting for lookup" },
+    { label: "Payment", done: paymentDone, detail: formatStatus(order?.paymentStatus) },
+    { label: "Packed", done: ["PACKED", "OUT_FOR_DELIVERY", "DELIVERED"].includes(deliveryStatus), detail: "Seller prepares item" },
+    { label: "Out for delivery", done: ["OUT_FOR_DELIVERY", "DELIVERED"].includes(deliveryStatus), detail: "Rider assigned" },
+    { label: "Delivered", done: deliveryStatus === "DELIVERED", detail: "Customer receives order" },
+  ];
+
+  const submitLookup = async (event) => {
+    event.preventDefault();
+    if (!form.orderNumber.trim() || !form.phone.trim() || status === "loading") return;
+    setStatus("loading");
+    try {
+      const found = await getOrder(form.orderNumber.trim(), form.phone.trim());
+      setOrder(found);
+      setStatus("ready");
+    } catch {
+      setOrder(null);
+      setStatus("error");
+    }
+  };
+
+  return (
+    <>
+      <CategoryNav
+        items={["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        active="New Drop"
+        note="REAL ORDER STATUS."
+        onSelect={onBrowse}
+      />
+      <section className="tracking-shell">
+        <div className="cart-heading">
+          <span>Order tracking</span>
+          <h1>Track your order</h1>
+          <p>Use the order number and phone used at checkout to see payment, packing, and delivery progress.</p>
+        </div>
+        <div className="tracking-layout">
+          <form className="tracking-form" onSubmit={submitLookup}>
+            <h2>Find order</h2>
+            <label>
+              Order number
+              <input value={form.orderNumber} onChange={(event) => setForm((current) => ({ ...current, orderNumber: event.target.value }))} placeholder="YLO-0000000000" />
+            </label>
+            <label>
+              Phone
+              <input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder="024 000 0000" />
+            </label>
+            <button className="checkout-btn" type="submit" disabled={!form.orderNumber.trim() || !form.phone.trim() || status === "loading"}>
+              {status === "loading" ? "Checking..." : "Check status"} <ArrowRight size={17} />
+            </button>
+            {status === "error" ? <p className="hold-message warning">No order matched those details. Check the order number and phone.</p> : null}
+          </form>
+          <section className="tracking-card">
+            <div className="tracking-summary">
+              <span>{order ? "Current order" : "Waiting for details"}</span>
+              <h2>{order?.orderNumber ?? "YINILOW"}</h2>
+              <strong>{formatMoney(order?.total, order?.currency)}</strong>
+              <em>{formatStatus(order?.status)}</em>
+            </div>
+            <div className="tracking-steps">
+              {steps.map((step) => (
+                <div className={step.done ? "tracking-step done" : "tracking-step"} key={step.label}>
+                  <span><ShieldCheck size={16} /></span>
+                  <div>
+                    <strong>{step.label}</strong>
+                    <small>{step.detail}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {order?.items?.length ? (
+              <div className="tracking-items">
+                {order.items.map((item) => (
+                  <div className="review-line" key={`${item.listingId}-${item.title}`}>
+                    <img src={assetImageByUrl[item.imageUrl] ?? listingImageById[item.listingId] ?? prodTee} alt={item.title} />
+                    <div>
+                      <span>{item.title}</span>
+                      <small>{item.sizeLabel ? `Size ${item.sizeLabel}` : "Verified item"}</small>
+                    </div>
+                    <strong>{formatMoney(item.price, item.currency)}</strong>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        </div>
       </section>
     </>
   );
@@ -2056,6 +2178,11 @@ export function App() {
     setBagState("idle");
     setScreen({ type: "seller", category: "Seller", product: null });
   };
+  const openTracking = (order = null) => {
+    setActive("clothing");
+    setBagState("idle");
+    setScreen({ type: "tracking", category: "Track", product: null, order });
+  };
   const showOrderCreated = (order) => {
     setCreatedOrder(order);
     setScreen({ type: "orderCreated", category: "Order", product: null });
@@ -2103,7 +2230,10 @@ export function App() {
       return <CheckoutPage onBrowse={browse} onOrderCreated={showOrderCreated} refreshCartCount={setCartCount} />;
     }
     if (screen.type === "orderCreated") {
-      return <OrderConfirmationPage order={createdOrder} onBrowse={browse} />;
+      return <OrderConfirmationPage order={createdOrder} onBrowse={browse} onTrack={openTracking} />;
+    }
+    if (screen.type === "tracking") {
+      return <OrderTrackingPage initialOrder={screen.order ?? createdOrder} onBrowse={browse} />;
     }
     if (screen.type === "seller") {
       return <SellerConsolePage onCreated={openProduct} refreshListings={refreshListings} />;
@@ -2124,7 +2254,7 @@ export function App() {
 
   return (
     <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>
-      <Header active={active} setActive={switchWorld} cartCount={cartCount} onCart={openCart} onSeller={openSeller} />
+      <Header active={active} setActive={switchWorld} cartCount={cartCount} onCart={openCart} onSeller={openSeller} onTrack={() => openTracking()} />
       {active === "clothing" ? (
         <div className="api-status">
           {apiStatus === "connected" ? "Live catalog connected" : "Prototype catalog fallback"}

@@ -51,6 +51,7 @@ public class PostgresOrderService implements OrderManager {
         .put("status", "PAYMENT_PENDING")
         .put("paymentStatus", "PENDING")
         .put("deliveryStatus", "NOT_STARTED")
+        .put("deliveryAddress", request.getJsonObject("deliveryAddress", new JsonObject()))
         .put("subtotal", subtotal)
         .put("serviceFee", serviceFee)
         .put("deliveryFee", deliveryFee)
@@ -63,6 +64,24 @@ public class PostgresOrderService implements OrderManager {
       return OrderResult.success(payload);
     } catch (SQLException exception) {
       throw new IllegalStateException("Could not create order", exception);
+    }
+  }
+
+  @Override
+  public OrderResult getOrder(String orderNumber, String phone) {
+    if (orderNumber == null || orderNumber.isBlank() || phone == null || phone.isBlank()) {
+      return OrderResult.failure(400, "ORDER_NUMBER_AND_PHONE_REQUIRED");
+    }
+
+    try (Connection connection = database.connection()) {
+      JsonObject order = findOrder(connection, orderNumber.trim(), phone.trim());
+      if (order == null) {
+        return OrderResult.failure(404, "ORDER_NOT_FOUND");
+      }
+      order.put("items", orderItems(connection, order.getString("orderId")));
+      return new OrderResult(true, 200, order);
+    } catch (SQLException exception) {
+      throw new IllegalStateException("Could not get order", exception);
     }
   }
 
@@ -185,6 +204,70 @@ public class PostgresOrderService implements OrderManager {
       cartItems.executeUpdate();
       cart.setString(1, CartService.DEMO_CART_ID);
       cart.executeUpdate();
+    }
+  }
+
+  private static JsonObject findOrder(Connection connection, String orderNumber, String phone) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+      SELECT id::text, order_number, status, payment_status, delivery_status, subtotal, service_fee, delivery_fee, total, delivery_address, created_at
+      FROM orders.orders
+      WHERE upper(order_number) = upper(?)
+        AND regexp_replace(coalesce(delivery_address->>'phone', ''), '\\s+', '', 'g') = regexp_replace(?, '\\s+', '', 'g')
+      LIMIT 1
+      """)) {
+      statement.setString(1, orderNumber);
+      statement.setString(2, phone);
+      try (ResultSet row = statement.executeQuery()) {
+        if (!row.next()) {
+          return null;
+        }
+        return new JsonObject()
+          .put("orderId", row.getString("id"))
+          .put("orderNumber", row.getString("order_number"))
+          .put("status", row.getString("status"))
+          .put("paymentStatus", row.getString("payment_status"))
+          .put("deliveryStatus", row.getString("delivery_status"))
+          .put("subtotal", row.getBigDecimal("subtotal"))
+          .put("serviceFee", row.getBigDecimal("service_fee"))
+          .put("deliveryFee", row.getBigDecimal("delivery_fee"))
+          .put("total", row.getBigDecimal("total"))
+          .put("currency", "GHS")
+          .put("deliveryAddress", new JsonObject(row.getString("delivery_address")))
+          .put("createdAt", row.getString("created_at"));
+      }
+    }
+  }
+
+  private static JsonArray orderItems(Connection connection, String orderId) throws SQLException {
+    try (var statement = connection.prepareStatement("""
+      SELECT listing.public_code, listing.title, listing.public_price, listing.currency, image.url AS image_url, unit.size_label
+      FROM orders.order_items item
+      JOIN catalog.product_listings listing ON listing.id = item.listing_id
+      JOIN catalog.item_units unit ON unit.id = item.item_unit_id
+      LEFT JOIN LATERAL (
+        SELECT url
+        FROM catalog.item_media
+        WHERE item_unit_id = unit.id AND approved = true
+        ORDER BY purpose = 'PRIMARY' DESC, created_at ASC
+        LIMIT 1
+      ) image ON true
+      WHERE item.order_id = ?::uuid
+      ORDER BY listing.title ASC
+      """)) {
+      statement.setString(1, orderId);
+      JsonArray items = new JsonArray();
+      try (ResultSet rows = statement.executeQuery()) {
+        while (rows.next()) {
+          items.add(new JsonObject()
+            .put("listingId", rows.getString("public_code"))
+            .put("title", rows.getString("title"))
+            .put("price", rows.getBigDecimal("public_price"))
+            .put("currency", rows.getString("currency"))
+            .put("imageUrl", rows.getString("image_url"))
+            .put("sizeLabel", rows.getString("size_label")));
+        }
+      }
+      return items;
     }
   }
 }

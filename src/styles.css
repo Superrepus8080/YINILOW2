@@ -1551,6 +1551,7 @@ button {
 }
 
 .checkout-fields input,
+.checkout-fields select,
 .checkout-fields textarea {
   width: 100%;
   border: 1px solid #e3dcd2;
@@ -1565,8 +1566,14 @@ button {
   letter-spacing: 0;
 }
 
-.checkout-fields input {
+.checkout-fields input,
+.checkout-fields select {
   height: 43px;
+}
+
+.checkout-fields select {
+  appearance: none;
+  cursor: pointer;
 }
 
 .checkout-fields textarea {
@@ -1576,6 +1583,7 @@ button {
 }
 
 .checkout-fields input:focus,
+.checkout-fields select:focus,
 .checkout-fields textarea:focus {
   border-color: #ffd000;
   box-shadow: 0 0 0 3px rgba(255, 208, 0, .16);
@@ -2328,6 +2336,193 @@ button {
   align-items: center;
   gap: 9px;
   padding: 0 14px;
+}
+
+.confirmation-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.confirmation-actions .dark-btn,
+.confirmation-actions .ghost-btn {
+  min-width: 190px;
+}
+
+.tracking-shell {
+  margin-top: 22px;
+}
+
+.tracking-layout {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.tracking-form,
+.tracking-card {
+  border: 1px solid #ebe5dc;
+  border-radius: 12px;
+  background: #fffdfa;
+  box-shadow: 0 12px 32px rgba(23, 18, 10, .05);
+  padding: 22px;
+}
+
+.tracking-form {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.tracking-form h2,
+.tracking-summary h2 {
+  margin: 0;
+  font-family: Anton, Impact, "Arial Black", sans-serif;
+  text-transform: uppercase;
+  line-height: .95;
+}
+
+.tracking-form h2 {
+  font-size: 28px;
+}
+
+.tracking-form label {
+  display: grid;
+  gap: 8px;
+  color: #2f2a23;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .035em;
+}
+
+.tracking-form input {
+  width: 100%;
+  height: 43px;
+  border: 1px solid #e3dcd2;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  outline: 0;
+  padding: 0 13px;
+  font-size: 14px;
+  font-weight: 650;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.tracking-form input:focus {
+  border-color: #ffd000;
+  box-shadow: 0 0 0 3px rgba(255, 208, 0, .16);
+}
+
+.tracking-card {
+  display: grid;
+  gap: 20px;
+}
+
+.tracking-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 18px;
+  align-items: end;
+  border-bottom: 1px solid #ebe5dc;
+  padding-bottom: 18px;
+}
+
+.tracking-summary span {
+  grid-column: 1 / -1;
+  color: #6c6258;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+
+.tracking-summary h2 {
+  font-size: 48px;
+}
+
+.tracking-summary strong {
+  font-size: 21px;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+
+.tracking-summary em {
+  grid-column: 1 / -1;
+  justify-self: start;
+  border-radius: 999px;
+  background: #fff1ba;
+  color: #17120b;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.tracking-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tracking-step {
+  min-height: 122px;
+  border: 1px solid #ebe5dc;
+  border-radius: 10px;
+  background: #fff;
+  padding: 13px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.tracking-step > span {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #e4dcd1;
+  background: #f7f2ea;
+  color: #766d62;
+  display: grid;
+  place-items: center;
+}
+
+.tracking-step.done > span {
+  border-color: #15110b;
+  background: #15110b;
+  color: #fff;
+}
+
+.tracking-step strong,
+.tracking-step small {
+  display: block;
+}
+
+.tracking-step strong {
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.tracking-step small {
+  margin-top: 5px;
+  color: #655d53;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.tracking-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .related-shell {
@@ -3721,6 +3916,31 @@ button {
   .receipt-card > div {
     grid-template-columns: 1fr;
     gap: 6px;
+  }
+
+  .confirmation-actions {
+    display: grid;
+  }
+
+  .tracking-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tracking-form {
+    position: static;
+  }
+
+  .tracking-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .tracking-summary h2 {
+    font-size: 38px;
+  }
+
+  .tracking-steps,
+  .tracking-items {
+    grid-template-columns: 1fr;
   }
 
   .seller-heading {

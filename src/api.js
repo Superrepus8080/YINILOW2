@@ -128,7 +128,7 @@ export function checkoutQuote() {
   return request("/api/v1/checkout/quote", { method: "POST", body: "{}" });
 }
 
-export function createOrder(deliveryAddress) {
+export function createOrder(deliveryAddress, paymentMethod = "MOBILE_MONEY") {
   return request("/api/v1/checkout/orders", {
     method: "POST",
     headers: {
@@ -136,9 +136,14 @@ export function createOrder(deliveryAddress) {
     },
     body: JSON.stringify({
       deliveryAddress,
-      paymentMethod: "MOMO_PLACEHOLDER",
+      paymentMethod,
     }),
   });
+}
+
+export function getOrder(orderNumber, phone) {
+  const params = new URLSearchParams({ phone });
+  return request(`/api/v1/orders/${encodeURIComponent(orderNumber)}?${params.toString()}`);
 }
 
 export function initializePayment(orderId) {

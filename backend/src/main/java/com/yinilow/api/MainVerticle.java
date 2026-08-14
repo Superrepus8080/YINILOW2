@@ -161,6 +161,11 @@ public class MainVerticle extends AbstractVerticle {
       OrderManager.OrderResult result = orders.createOrder(body == null ? new JsonObject() : body, idempotencyKey);
       ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
     });
+    router.get("/api/v1/orders/:orderNumber").handler(ctx -> {
+      String phone = ctx.queryParam("phone").isEmpty() ? "" : ctx.queryParam("phone").get(0);
+      OrderManager.OrderResult result = orders.getOrder(ctx.pathParam("orderNumber"), phone);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
     router.post("/api/v1/payments/initialize").handler(ctx -> {
       JsonObject body = ctx.body().asJsonObject();
       String idempotencyKey = ctx.request().getHeader("x-idempotency-key");
