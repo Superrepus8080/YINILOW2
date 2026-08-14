@@ -48,6 +48,25 @@ import prodWindbreaker from "./assets/prod-windbreaker.jpg";
 import prodRugby from "./assets/prod-rugby.jpg";
 import prodTee from "./assets/prod-tee.jpg";
 import prodSunglasses from "./assets/prod-sunglasses.jpg";
+import denimBlackWorkPants from "./assets/catalog/denim-black-work-pants.jpg";
+import denimBlueLevisDenim from "./assets/catalog/denim-blue-levis-denim.jpg";
+import denimGreyWorkPants from "./assets/catalog/denim-grey-work-pants.jpg";
+import denimKhakiCargoPants from "./assets/catalog/denim-khaki-cargo-pants.jpg";
+import denimLightBlueDenim from "./assets/catalog/denim-light-blue-denim.jpg";
+import denimOliveCargoPants from "./assets/catalog/denim-olive-cargo-pants.jpg";
+import denimStoneWorkPants from "./assets/catalog/denim-stone-work-pants.jpg";
+import dropAdidasTrackJacket from "./assets/catalog/drop-adidas-track-jacket.jpg";
+import dropBlackBomber from "./assets/catalog/drop-black-bomber.jpg";
+import dropBlackRedAdidasShell from "./assets/catalog/drop-black-red-adidas-shell.jpg";
+import dropBlackRedBomber from "./assets/catalog/drop-black-red-bomber.jpg";
+import dropBlueVarsityJacket from "./assets/catalog/drop-blue-varsity-jacket.jpg";
+import dropGreenMiamiWindbreaker from "./assets/catalog/drop-green-miami-windbreaker.jpg";
+import dropGreyWorkJacket from "./assets/catalog/drop-grey-work-jacket.jpg";
+import dropNavyHoodedJacket from "./assets/catalog/drop-navy-hooded-jacket.jpg";
+import dropOliveUtilityVest from "./assets/catalog/drop-olive-utility-vest.jpg";
+import dropRedOhioPullover from "./assets/catalog/drop-red-ohio-pullover.jpg";
+import dropRedRainShell from "./assets/catalog/drop-red-rain-shell.jpg";
+import dropTanWorkVest from "./assets/catalog/drop-tan-work-vest.jpg";
 
 import homeHero from "./assets/home-hero-right-full.jpg";
 import homeSolarStation from "./assets/home-solar-station.jpg";
@@ -62,7 +81,52 @@ import findMatchReference from "./assets/find-match-reference.png";
 import { addToBag, checkoutQuote, clearSellerSession, confirmSandboxPayment, createAdminListing, createOrder, createSellerAccount, getAdminListings, getCart, getListings, getStoredSellerSession, initializePayment, recordRealtimeTelemetry, sellerLogin, sellerLogout, updateAdminListingVisibility } from "./api";
 import { createRealtimeDataChannel } from "./realtime";
 
+const catalogProductImages = {
+  "black-bomber-jacket": dropBlackBomber,
+  "tan-work-vest": dropTanWorkVest,
+  "black-red-bomber": dropBlackRedBomber,
+  "olive-utility-vest": dropOliveUtilityVest,
+  "navy-hooded-jacket": dropNavyHoodedJacket,
+  "adidas-track-jacket": dropAdidasTrackJacket,
+  "red-ohio-pullover": dropRedOhioPullover,
+  "blue-varsity-windbreaker": dropBlueVarsityJacket,
+  "green-miami-windbreaker": dropGreenMiamiWindbreaker,
+  "grey-work-jacket": dropGreyWorkJacket,
+  "red-rain-shell": dropRedRainShell,
+  "black-red-adidas-shell": dropBlackRedAdidasShell,
+  "stone-work-pants": denimStoneWorkPants,
+  "blue-levis-denim": denimBlueLevisDenim,
+  "grey-work-pants": denimGreyWorkPants,
+  "khaki-cargo-pants": denimKhakiCargoPants,
+  "light-blue-denim": denimLightBlueDenim,
+  "black-work-pants": denimBlackWorkPants,
+  "olive-cargo-pants": denimOliveCargoPants,
+};
+
+const freshPileProducts = [
+  { id: "black-bomber-jacket", name: "Vintage Black Bomber Jacket", price: "GHC125", image: catalogProductImages["black-bomber-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "3XL", note: "Freshly cropped from the YINILOW pile, checked and ready for local checkout." },
+  { id: "tan-work-vest", name: "Tan Work Vest", price: "GHC95", image: catalogProductImages["tan-work-vest"], category: "Vests", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "2XL", note: "Rugged workwear vest with utility pockets and warm vintage texture." },
+  { id: "black-red-bomber", name: "Black Red Bomber Jacket", price: "GHC110", image: catalogProductImages["black-red-bomber"], category: "Jackets", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Lightweight bomber with bold red trim and a clean streetwear profile." },
+  { id: "olive-utility-vest", name: "Olive Utility Vest", price: "GHC85", image: catalogProductImages["olive-utility-vest"], category: "Vests", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Sleeveless utility layer with a soft washed finish and easy styling." },
+  { id: "navy-hooded-jacket", name: "Navy Hooded Jacket", price: "GHC140", image: catalogProductImages["navy-hooded-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Hooded everyday jacket with a strong oversized thrift feel." },
+  { id: "adidas-track-jacket", name: "Adidas Track Jacket", price: "GHC120", image: catalogProductImages["adidas-track-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Classic black-and-white track jacket, inspected for zipper and cuff wear." },
+  { id: "red-ohio-pullover", name: "Red Ohio Pullover", price: "GHC90", image: catalogProductImages["red-ohio-pullover"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Bright collegiate pullover with a clean vintage sportswear mood." },
+  { id: "blue-varsity-windbreaker", name: "Blue Varsity Windbreaker", price: "GHC115", image: catalogProductImages["blue-varsity-windbreaker"], category: "Jackets", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Royal blue varsity shell with striped cuffs and strong color pop." },
+  { id: "green-miami-windbreaker", name: "Green Miami Windbreaker", price: "GHC105", image: catalogProductImages["green-miami-windbreaker"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Green and orange windbreaker with a bold retro campus look." },
+  { id: "grey-work-jacket", name: "Grey Work Jacket", price: "GHC130", image: catalogProductImages["grey-work-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Structured work jacket with neutral color and everyday layering weight." },
+  { id: "red-rain-shell", name: "Red Rain Shell", price: "GHC80", image: catalogProductImages["red-rain-shell"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Packable red shell jacket for light rain, errands, and street styling." },
+  { id: "black-red-adidas-shell", name: "Black Red Adidas Shell", price: "GHC125", image: catalogProductImages["black-red-adidas-shell"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Sport shell jacket with sharp black-and-red blocking and zip front." },
+  { id: "stone-work-pants", name: "Stone Work Pants W46", price: "GHC110", image: catalogProductImages["stone-work-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W46", note: "Relaxed stone work pants with utility attitude and a roomy fit." },
+  { id: "blue-levis-denim", name: "Blue Levi's Denim W44", price: "GHC125", image: catalogProductImages["blue-levis-denim"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Blue Levi's denim with a straight-leg thrift profile and visible back patch." },
+  { id: "grey-work-pants", name: "Grey Work Pants W44", price: "GHC105", image: catalogProductImages["grey-work-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Grey work pants with a softened wash and daily utility fit." },
+  { id: "khaki-cargo-pants", name: "Khaki Cargo Pants W44", price: "GHC115", image: catalogProductImages["khaki-cargo-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Khaki cargo pants with roomy pockets and a relaxed secondhand feel." },
+  { id: "light-blue-denim", name: "Light Blue Denim W42", price: "GHC100", image: catalogProductImages["light-blue-denim"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W42", note: "Light blue denim with a classic worn-in wash and easy street fit." },
+  { id: "black-work-pants", name: "Black Work Pants W40", price: "GHC110", image: catalogProductImages["black-work-pants"], category: "Pants", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W40", note: "Black work pants with a clean look, utility back patch, and solid structure." },
+  { id: "olive-cargo-pants", name: "Olive Cargo Pants W40", price: "GHC105", image: catalogProductImages["olive-cargo-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W40", note: "Olive cargo pants with soft fading and pocket-heavy thrift character." },
+];
+
 const clothingProducts = [
+  ...freshPileProducts,
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
   { id: "camo-cargo", name: "Camo Cargo Pants", price: "GHC90", image: prodCargo, category: "Men", condition: "Good", seller: "Pile House", location: "Kumasi", note: "Utility cargo fit with checked seams and secure pockets." },
   { id: "air-jordan", name: "Air Jordan 1 Chicago (Used)", price: "GHC250", image: prodJordan, category: "Shoes", condition: "Used", seller: "Sneaker Loop", location: "Accra", note: "Authenticated pair with visible wear and photo evidence." },
@@ -77,12 +141,50 @@ const listingImageById = {
   lst_vintage_polo: prodRugby,
   lst_leather_jacket: prodLeather,
   lst_camo_cargo: prodCargo,
+  lst_black_bomber_jacket: dropBlackBomber,
+  lst_tan_work_vest: dropTanWorkVest,
+  lst_black_red_bomber: dropBlackRedBomber,
+  lst_olive_utility_vest: dropOliveUtilityVest,
+  lst_navy_hooded_jacket: dropNavyHoodedJacket,
+  lst_adidas_track_jacket: dropAdidasTrackJacket,
+  lst_red_ohio_pullover: dropRedOhioPullover,
+  lst_blue_varsity_windbreaker: dropBlueVarsityJacket,
+  lst_green_miami_windbreaker: dropGreenMiamiWindbreaker,
+  lst_grey_work_jacket: dropGreyWorkJacket,
+  lst_red_rain_shell: dropRedRainShell,
+  lst_black_red_adidas_shell: dropBlackRedAdidasShell,
+  lst_stone_work_pants: denimStoneWorkPants,
+  lst_blue_levis_denim: denimBlueLevisDenim,
+  lst_grey_work_pants: denimGreyWorkPants,
+  lst_khaki_cargo_pants: denimKhakiCargoPants,
+  lst_light_blue_denim: denimLightBlueDenim,
+  lst_black_work_pants: denimBlackWorkPants,
+  lst_olive_cargo_pants: denimOliveCargoPants,
 };
 
 const assetImageByUrl = {
   "/assets/prod-rugby.jpg": prodRugby,
   "/assets/prod-leather.jpg": prodLeather,
   "/assets/prod-cargo.jpg": prodCargo,
+  "/assets/catalog/drop-black-bomber.jpg": dropBlackBomber,
+  "/assets/catalog/drop-tan-work-vest.jpg": dropTanWorkVest,
+  "/assets/catalog/drop-black-red-bomber.jpg": dropBlackRedBomber,
+  "/assets/catalog/drop-olive-utility-vest.jpg": dropOliveUtilityVest,
+  "/assets/catalog/drop-navy-hooded-jacket.jpg": dropNavyHoodedJacket,
+  "/assets/catalog/drop-adidas-track-jacket.jpg": dropAdidasTrackJacket,
+  "/assets/catalog/drop-red-ohio-pullover.jpg": dropRedOhioPullover,
+  "/assets/catalog/drop-blue-varsity-jacket.jpg": dropBlueVarsityJacket,
+  "/assets/catalog/drop-green-miami-windbreaker.jpg": dropGreenMiamiWindbreaker,
+  "/assets/catalog/drop-grey-work-jacket.jpg": dropGreyWorkJacket,
+  "/assets/catalog/drop-red-rain-shell.jpg": dropRedRainShell,
+  "/assets/catalog/drop-black-red-adidas-shell.jpg": dropBlackRedAdidasShell,
+  "/assets/catalog/denim-stone-work-pants.jpg": denimStoneWorkPants,
+  "/assets/catalog/denim-blue-levis-denim.jpg": denimBlueLevisDenim,
+  "/assets/catalog/denim-grey-work-pants.jpg": denimGreyWorkPants,
+  "/assets/catalog/denim-khaki-cargo-pants.jpg": denimKhakiCargoPants,
+  "/assets/catalog/denim-light-blue-denim.jpg": denimLightBlueDenim,
+  "/assets/catalog/denim-black-work-pants.jpg": denimBlackWorkPants,
+  "/assets/catalog/denim-olive-cargo-pants.jpg": denimOliveCargoPants,
 };
 
 function formatCondition(value) {
