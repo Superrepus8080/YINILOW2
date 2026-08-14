@@ -27,6 +27,13 @@ export function getListing(listingId) {
   return request(`/api/v1/catalog/listings/${listingId}`);
 }
 
+export function createAdminListing(listing) {
+  return request("/api/v1/admin/catalog/listings", {
+    method: "POST",
+    body: JSON.stringify(listing),
+  });
+}
+
 export function getCart() {
   return request("/api/v1/cart");
 }

@@ -1,7 +1,10 @@
 package com.yinilow.api;
 
+import com.yinilow.catalog.CatalogAdmin;
 import com.yinilow.catalog.CatalogReader;
 import com.yinilow.catalog.CatalogService;
+import com.yinilow.catalog.MemoryCatalogAdmin;
+import com.yinilow.catalog.PostgresCatalogAdmin;
 import com.yinilow.catalog.PostgresCatalogService;
 import com.yinilow.cart.CartService;
 import com.yinilow.db.Database;
@@ -26,6 +29,7 @@ import io.vertx.ext.web.handler.CorsHandler;
 
 public class MainVerticle extends AbstractVerticle {
   private volatile CatalogReader catalog;
+  private volatile CatalogAdmin catalogAdmin;
   private volatile HoldManager holds;
   private volatile CartService carts;
   private volatile OrderManager orders;
@@ -76,6 +80,11 @@ public class MainVerticle extends AbstractVerticle {
       catalog.publicListingDetail(listingId)
         .ifPresentOrElse(ctx::json, () -> notFound(ctx, "LISTING_NOT_FOUND"));
     });
+    router.post("/api/v1/admin/catalog/listings").handler(ctx -> {
+      JsonObject body = ctx.body().asJsonObject();
+      CatalogAdmin.CreateListingResult result = catalogAdmin.createListing(body == null ? new JsonObject() : body);
+      ctx.response().setStatusCode(result.statusCode()).putHeader("content-type", "application/json").end(result.payload().encode());
+    });
 
     router.get("/api/v1/cart").handler(ctx -> ctx.json(carts.getActiveCart()));
     router.post("/api/v1/cart/items").handler(ctx -> {
@@ -121,6 +130,7 @@ public class MainVerticle extends AbstractVerticle {
 
   private void initializeMemoryServices(String mode) {
     catalog = CatalogService.seeded();
+    catalogAdmin = new MemoryCatalogAdmin();
     holds = new HoldService();
     carts = new CartService(catalog, holds);
     orders = new MemoryOrderService(carts);
@@ -139,11 +149,13 @@ public class MainVerticle extends AbstractVerticle {
       Database database = new Database(config);
       new DatabaseBootstrap(database).migrateAndSeed();
       CatalogReader postgresCatalog = new PostgresCatalogService(database);
+      CatalogAdmin postgresCatalogAdmin = new PostgresCatalogAdmin(database);
       HoldManager postgresHolds = new PostgresHoldService(database);
       CartService postgresCarts = new CartService(postgresCatalog, postgresHolds);
-      return new DataServices(postgresCatalog, postgresHolds, postgresCarts, new PostgresOrderService(database), new PostgresPaymentService(database));
+      return new DataServices(postgresCatalog, postgresCatalogAdmin, postgresHolds, postgresCarts, new PostgresOrderService(database), new PostgresPaymentService(database));
     }).onSuccess(services -> {
       catalog = services.catalog();
+      catalogAdmin = services.catalogAdmin();
       holds = services.holds();
       carts = services.carts();
       orders = services.orders();
@@ -155,7 +167,7 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  private record DataServices(CatalogReader catalog, HoldManager holds, CartService carts, OrderManager orders, PaymentManager payments) {
+  private record DataServices(CatalogReader catalog, CatalogAdmin catalogAdmin, HoldManager holds, CartService carts, OrderManager orders, PaymentManager payments) {
   }
 
   private static void notFound(io.vertx.ext.web.RoutingContext ctx, String code) {

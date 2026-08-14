@@ -58,7 +58,7 @@ import homeAirfryer from "./assets/home-airfryer.jpg";
 import homeAc from "./assets/home-ac.jpg";
 import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
-import { addToBag, checkoutQuote, confirmSandboxPayment, createOrder, getCart, getListings, initializePayment } from "./api";
+import { addToBag, checkoutQuote, confirmSandboxPayment, createAdminListing, createOrder, getCart, getListings, initializePayment } from "./api";
 
 const clothingProducts = [
   { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
@@ -94,7 +94,7 @@ function normalizeApiProduct(product) {
     listingId: product.listingId,
     name: product.title,
     price: `${product.currency ?? "GHS"} ${Number(product.price ?? 0).toFixed(2)}`,
-    image: listingImageById[product.listingId] ?? prodTee,
+    image: listingImageById[product.listingId] ?? assetImageByUrl[product.imageUrl] ?? product.imageUrl ?? prodTee,
     category: product.category ?? "New Drop",
     condition: formatCondition(product.conditionPublic),
     seller: product.sellerTrustLabel ?? "YINILOW Verified",
@@ -158,7 +158,7 @@ function Logo() {
   );
 }
 
-function Header({ active, setActive, cartCount = 0, onCart }) {
+function Header({ active, setActive, cartCount = 0, onCart, onSeller }) {
   const isHome = active === "home";
   return (
     <header className="topbar">
@@ -196,6 +196,9 @@ function Header({ active, setActive, cartCount = 0, onCart }) {
         </button>
         <button>
           <User size={22} /> Account
+        </button>
+        <button onClick={onSeller}>
+          <Package size={22} /> Seller
         </button>
         <button className="cart" onClick={onCart}>
           <ShoppingCart size={23} />
@@ -575,6 +578,157 @@ function ProductDetail({ active, product, onBack, onBrowse, onOpenProduct, cloth
             <ProductCard key={item.id} product={item} fashion={!isHome} onOpen={onOpenProduct} />
           ))}
         </div>
+      </section>
+    </>
+  );
+}
+
+function SellerConsolePage({ onCreated, refreshListings }) {
+  const [form, setForm] = useState({
+    title: "Fresh Y2K denim jacket",
+    category: "New Drop",
+    price: "120",
+    sizeLabel: "M",
+    colorLabel: "Blue",
+    conditionPublic: "VERY_GOOD",
+    imageUrl: "/assets/prod-leather.jpg",
+    description: "Inspected seller item ready for YINILOW checkout.",
+    chest: "54",
+    length: "68",
+  });
+  const [status, setStatus] = useState("idle");
+  const [created, setCreated] = useState(null);
+
+  const updateField = (field) => (event) => {
+    setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const submitListing = async (event) => {
+    event.preventDefault();
+    setStatus("saving");
+    setCreated(null);
+    try {
+      const listing = await createAdminListing({
+        title: form.title,
+        category: form.category,
+        price: form.price,
+        sizeLabel: form.sizeLabel,
+        colorLabel: form.colorLabel,
+        conditionPublic: form.conditionPublic,
+        imageUrl: form.imageUrl,
+        description: form.description,
+        pileEligible: true,
+        measurements: {
+          chest: form.chest,
+          length: form.length,
+        },
+      });
+      setCreated(listing);
+      setStatus("saved");
+      const products = await refreshListings();
+      const product = products.find((item) => item.listingId === listing.listingId);
+      if (product) {
+        onCreated(product);
+      }
+    } catch (error) {
+      setStatus("error");
+    }
+  };
+
+  return (
+    <>
+      <CategoryNav
+        items={["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        active="New Drop"
+        note="SELLER INTAKE. PUBLIC CATALOG."
+      />
+      <section className="seller-shell">
+        <div className="seller-heading">
+          <span>Seller console</span>
+          <h1>Add a live clothing listing</h1>
+          <p>Create fresh stock for the public storefront, checkout, holds, and payment flow.</p>
+        </div>
+        <form className="seller-form" onSubmit={submitListing}>
+          <label>
+            Product title
+            <input value={form.title} onChange={updateField("title")} placeholder="Vintage jacket" />
+          </label>
+          <label>
+            Category
+            <select value={form.category} onChange={updateField("category")}>
+              {["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories"].map((category) => (
+                <option key={category}>{category}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Price
+            <input value={form.price} onChange={updateField("price")} inputMode="decimal" placeholder="120" />
+          </label>
+          <label>
+            Size
+            <input value={form.sizeLabel} onChange={updateField("sizeLabel")} placeholder="M" />
+          </label>
+          <label>
+            Color
+            <input value={form.colorLabel} onChange={updateField("colorLabel")} placeholder="Blue" />
+          </label>
+          <label>
+            Condition
+            <select value={form.conditionPublic} onChange={updateField("conditionPublic")}>
+              <option value="LIKE_NEW">Like new</option>
+              <option value="VERY_GOOD">Very good</option>
+              <option value="GOOD">Good</option>
+              <option value="FAIR">Fair</option>
+            </select>
+          </label>
+          <label className="wide">
+            Image path or URL
+            <input value={form.imageUrl} onChange={updateField("imageUrl")} placeholder="/assets/prod-tee.jpg" />
+          </label>
+          <label className="wide">
+            Description
+            <textarea value={form.description} onChange={updateField("description")} placeholder="Describe fit, condition, and notable details" />
+          </label>
+          <label>
+            Chest cm
+            <input value={form.chest} onChange={updateField("chest")} inputMode="decimal" />
+          </label>
+          <label>
+            Length cm
+            <input value={form.length} onChange={updateField("length")} inputMode="decimal" />
+          </label>
+          <div className="seller-actions wide">
+            <button className="dark-btn" disabled={status === "saving"}>
+              {status === "saving" ? "Publishing..." : "Publish listing"} <ArrowRight size={17} />
+            </button>
+            {status === "saved" ? <span>Listing is live.</span> : null}
+            {status === "error" ? <span className="warning">Listing could not be saved.</span> : null}
+          </div>
+        </form>
+        <aside className="seller-preview">
+          <span>Preview</span>
+          <ProductCard
+            product={{
+              id: "seller-preview",
+              name: form.title || "New listing",
+              price: `GHS ${Number(form.price || 0).toFixed(2)}`,
+              image: assetImageByUrl[form.imageUrl] ?? form.imageUrl ?? prodTee,
+              category: form.category,
+              condition: formatCondition(form.conditionPublic),
+              stockLabel: "Only 1 left",
+            }}
+            fashion
+          />
+          {created ? (
+            <button className="ghost-btn" onClick={() => refreshListings().then((products) => {
+              const product = products.find((item) => item.listingId === created.listingId);
+              if (product) onCreated(product);
+            })}>
+              Open live listing <ArrowRight size={17} />
+            </button>
+          ) : null}
+        </aside>
       </section>
     </>
   );
@@ -1252,12 +1406,19 @@ export function App() {
   const [createdOrder, setCreatedOrder] = useState(null);
   const clothingCatalog = apiProducts.length ? apiProducts : clothingProducts;
 
+  const refreshListings = async () => {
+    const listings = await getListings();
+    const products = listings.map(normalizeApiProduct);
+    setApiProducts(products);
+    setApiStatus("connected");
+    return products;
+  };
+
   useEffect(() => {
     let cancelled = false;
-    getListings()
-      .then((listings) => {
+    refreshListings()
+      .then(() => {
         if (!cancelled) {
-          setApiProducts(listings.map(normalizeApiProduct));
           setApiStatus("connected");
         }
       })
@@ -1320,6 +1481,11 @@ export function App() {
     setBagState("idle");
     setScreen({ type: "checkout", category: "Checkout", product: null });
   };
+  const openSeller = () => {
+    setActive("clothing");
+    setBagState("idle");
+    setScreen({ type: "seller", category: "Seller", product: null });
+  };
   const showOrderCreated = (order) => {
     setCreatedOrder(order);
     setScreen({ type: "orderCreated", category: "Order", product: null });
@@ -1355,6 +1521,9 @@ export function App() {
     if (screen.type === "orderCreated") {
       return <OrderConfirmationPage order={createdOrder} onBrowse={browse} />;
     }
+    if (screen.type === "seller") {
+      return <SellerConsolePage onCreated={openProduct} refreshListings={refreshListings} />;
+    }
     if (screen.type === "dig") {
       return <DigPilePage onBrowse={browse} onOpenProduct={openProduct} />;
     }
@@ -1371,7 +1540,7 @@ export function App() {
 
   return (
     <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>
-      <Header active={active} setActive={switchWorld} cartCount={cartCount} onCart={openCart} />
+      <Header active={active} setActive={switchWorld} cartCount={cartCount} onCart={openCart} onSeller={openSeller} />
       {active === "clothing" ? (
         <div className="api-status">
           {apiStatus === "connected" ? "Live catalog connected" : "Prototype catalog fallback"}
