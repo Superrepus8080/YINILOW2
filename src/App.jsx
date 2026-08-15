@@ -127,14 +127,14 @@ const freshPileProducts = [
 
 const clothingProducts = [
   ...freshPileProducts,
-  { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "Kwame Thrift", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
-  { id: "camo-cargo", name: "Camo Cargo Pants", price: "GHC90", image: prodCargo, category: "Men", condition: "Good", seller: "Pile House", location: "Kumasi", note: "Utility cargo fit with checked seams and secure pockets." },
-  { id: "air-jordan", name: "Air Jordan 1 Chicago (Used)", price: "GHC250", image: prodJordan, category: "Shoes", condition: "Used", seller: "Sneaker Loop", location: "Accra", note: "Authenticated pair with visible wear and photo evidence." },
-  { id: "y2k-bag", name: "Y2K Shoulder Bag", price: "GHC75", image: prodBag, category: "Bags & Accessories", condition: "Very good", seller: "Afi Selects", location: "Tema", note: "Compact black shoulder bag with inspected zipper and strap." },
-  { id: "windbreaker", name: "Adidas Windbreaker", price: "GHC55", image: prodWindbreaker, category: "Men", condition: "Good", seller: "North Ridge Finds", location: "Accra", note: "Blue windbreaker, lightweight, checked for stains and tears." },
-  { id: "rugby-shirt", name: "Vintage Rugby Shirt", price: "GHC60", image: prodRugby, category: "Women", condition: "Very good", seller: "Weekend Pile", location: "Cape Coast", note: "Striped rugby shirt with strong color and verified measurements." },
-  { id: "graphic-tee", name: "Graphic Print Tee", price: "GHC25", image: prodTee, category: "New Drop", condition: "Good", seller: "Kwame Thrift", location: "Accra", note: "Soft graphic tee, washed, inspected, and ready to ship." },
-  { id: "retro-sunglasses", name: "Retro Sunglasses", price: "GHC25", image: prodSunglasses, category: "Bags & Accessories", condition: "Excellent", seller: "Afi Selects", location: "Tema", note: "Lightweight retro frame with clean lenses and case-ready packaging." },
+  { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "YINILOW Verified", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
+  { id: "camo-cargo", name: "Camo Cargo Pants", price: "GHC90", image: prodCargo, category: "Men", condition: "Good", seller: "YINILOW Verified", location: "Kumasi", note: "Utility cargo fit with checked seams and secure pockets." },
+  { id: "air-jordan", name: "Air Jordan 1 Chicago (Used)", price: "GHC250", image: prodJordan, category: "Shoes", condition: "Used", seller: "YINILOW Verified", location: "Accra", note: "Authenticated pair with visible wear and photo evidence." },
+  { id: "y2k-bag", name: "Y2K Shoulder Bag", price: "GHC75", image: prodBag, category: "Bags & Accessories", condition: "Very good", seller: "YINILOW Verified", location: "Tema", note: "Compact black shoulder bag with inspected zipper and strap." },
+  { id: "windbreaker", name: "Adidas Windbreaker", price: "GHC55", image: prodWindbreaker, category: "Men", condition: "Good", seller: "YINILOW Verified", location: "Accra", note: "Blue windbreaker, lightweight, checked for stains and tears." },
+  { id: "rugby-shirt", name: "Vintage Rugby Shirt", price: "GHC60", image: prodRugby, category: "Women", condition: "Very good", seller: "YINILOW Verified", location: "Cape Coast", note: "Striped rugby shirt with strong color and verified measurements." },
+  { id: "graphic-tee", name: "Graphic Print Tee", price: "GHC25", image: prodTee, category: "New Drop", condition: "Good", seller: "YINILOW Verified", location: "Accra", note: "Soft graphic tee, washed, inspected, and ready to ship." },
+  { id: "retro-sunglasses", name: "Retro Sunglasses", price: "GHC25", image: prodSunglasses, category: "Bags & Accessories", condition: "Excellent", seller: "YINILOW Verified", location: "Tema", note: "Lightweight retro frame with clean lenses and case-ready packaging." },
 ];
 
 const listingImageById = {
@@ -192,6 +192,48 @@ function formatCondition(value) {
   return value.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+// Public surfaces must never expose vendor or reseller identity. Only an
+// approved YINILOW trust label may stand in for the seller.
+const APPROVED_TRUST_LABELS = new Set(["YINILOW Verified", "YINILOW Pile", "YINILOW Home"]);
+
+function publicTrustLabel(product) {
+  const label = product?.sellerTrustLabel ?? product?.seller;
+  return APPROVED_TRUST_LABELS.has(label) ? label : "YINILOW Verified";
+}
+
+// Curated display order. Only categories that actually hold stock reach the nav,
+// so a category can never advertise a rack that is empty.
+const CLOTHING_CATEGORY_ORDER = [
+  "New Drop",
+  "Jackets",
+  "Pants",
+  "Vests",
+  "Women",
+  "Men",
+  "Children",
+  "Shoes",
+  "Bags & Accessories",
+];
+
+// Guide 3.3: a missing photo must fall back to the branded placeholder, never a
+// blank gray box. The wrapper renders the placeholder once the image is hidden.
+function handleImageFallback(event) {
+  const image = event.currentTarget;
+  if (image.dataset.fallbackApplied) return;
+  image.dataset.fallbackApplied = "true";
+  image.style.visibility = "hidden";
+  image.parentElement?.classList.add("image-missing");
+}
+
+function clothingNavItems(catalog = []) {
+  const stocked = new Set(catalog.map((product) => product.category));
+  const ordered = CLOTHING_CATEGORY_ORDER.filter((category) => stocked.has(category));
+  const extras = [...stocked].filter(
+    (category) => category && !CLOTHING_CATEGORY_ORDER.includes(category),
+  );
+  return [...ordered, ...extras, "Dig the Pile", "Stock Drop"];
+}
+
 function normalizeApiProduct(product) {
   return {
     id: product.listingId,
@@ -244,17 +286,17 @@ const dropProducts = [
 ];
 
 const homeEnergy = [
-  { id: "solar-station", name: "Solar Power Station 600W", price: "GHS 5,490.00", image: homeSolarStation, rating: "4.8 (132)", category: "Energy Smart", condition: "New", seller: "Energy Hub", location: "Accra", note: "Portable backup power for lights, laptops, routers, and small appliances." },
-  { id: "solar-panel", name: "Solar Panel 200W", price: "GHS 2,199.00", image: homeSolarPanel, rating: "4.6 (96)", category: "Power & Energy", condition: "New", seller: "Energy Hub", location: "Accra", note: "Efficient panel for charging stations and small home backup systems." },
+  { id: "solar-station", name: "Solar Power Station 600W", price: "GHS 5,490.00", image: homeSolarStation, rating: "4.8 (132)", category: "Energy Smart", condition: "New", seller: "YINILOW Verified", location: "Accra", note: "Portable backup power for lights, laptops, routers, and small appliances." },
+  { id: "solar-panel", name: "Solar Panel 200W", price: "GHS 2,199.00", image: homeSolarPanel, rating: "4.6 (96)", category: "Power & Energy", condition: "New", seller: "YINILOW Verified", location: "Accra", note: "Efficient panel for charging stations and small home backup systems." },
   { id: "led-bulbs", name: "LED Bulb 12W (Pack of 4)", price: "GHS 120.00", image: homeLedBulbs, rating: "4.7 (556)", category: "Energy Smart", condition: "New", seller: "YINILOW Home", location: "Kumasi", note: "Energy-saving bulb set for daily home use." },
-  { id: "inverter", name: "Inverter 2000VA", price: "GHS 2,990.00", image: homeInverter, rating: "4.6 (381)", category: "Power & Energy", condition: "New", seller: "SmartGrid Ghana", location: "Tema", note: "Stable home inverter for backup power and essential devices." },
+  { id: "inverter", name: "Inverter 2000VA", price: "GHS 2,990.00", image: homeInverter, rating: "4.6 (381)", category: "Power & Energy", condition: "New", seller: "YINILOW Verified", location: "Tema", note: "Stable home inverter for backup power and essential devices." },
 ];
 
 const homeTop = [
   { id: "microwave", name: "Samsung Microwave 20L", price: "GHS 1,199.00", image: homeMicrowave, rating: "4.7 (213)", category: "Kitchen", condition: "New", seller: "YINILOW Home", location: "Accra", note: "Compact microwave for everyday heating and small kitchens." },
-  { id: "airfryer", name: "Philips Air Fryer 4.1L", price: "GHS 1,399.00", image: homeAirfryer, rating: "4.8 (1.2k)", category: "Small Appliances", condition: "New", seller: "Appliance Mart", location: "Accra", note: "Family-size air fryer with warranty support." },
-  { id: "portable-ac", name: "Portable AC 9000BTU", price: "GHS 2,699.00", image: homeAc, rating: "4.5 (97)", category: "Cooling & Fans", condition: "New", seller: "CoolZone", location: "Tema", note: "Portable cooling for rooms and small offices." },
-  { id: "earbuds", name: "Wireless Earbuds Pro", price: "GHS 999.00", image: homeEarbuds, rating: "4.6 (1.7k)", category: "Entertainment", condition: "New", seller: "Tech Yard", location: "Accra", note: "Wireless earbuds with compact charging case." },
+  { id: "airfryer", name: "Philips Air Fryer 4.1L", price: "GHS 1,399.00", image: homeAirfryer, rating: "4.8 (1.2k)", category: "Small Appliances", condition: "New", seller: "YINILOW Verified", location: "Accra", note: "Family-size air fryer with warranty support." },
+  { id: "portable-ac", name: "Portable AC 9000BTU", price: "GHS 2,699.00", image: homeAc, rating: "4.5 (97)", category: "Cooling & Fans", condition: "New", seller: "YINILOW Verified", location: "Tema", note: "Portable cooling for rooms and small offices." },
+  { id: "earbuds", name: "Wireless Earbuds Pro", price: "GHS 999.00", image: homeEarbuds, rating: "4.6 (1.7k)", category: "Entertainment", condition: "New", seller: "YINILOW Verified", location: "Accra", note: "Wireless earbuds with compact charging case." },
 ];
 
 const allHomeProducts = [...homeEnergy, ...homeTop];
@@ -287,8 +329,12 @@ function Header({ active, setActive, cartCount = 0, onCart, onSeller, onTrack })
         </button>
       </div>
       <label className="search">
-        <MagnifyingGlass size={22} />
+        <span className="visually-hidden">
+          {isHome ? "Search home and electronics" : "Search clothing and accessories"}
+        </span>
+        <MagnifyingGlass size={22} aria-hidden="true" />
         <input
+          type="search"
           placeholder={
             isHome
               ? "Search appliances, decor & electronics..."
@@ -312,9 +358,9 @@ function Header({ active, setActive, cartCount = 0, onCart, onSeller, onTrack })
         <button onClick={onSeller}>
           <Package size={22} /> Seller
         </button>
-        <button className="cart" onClick={onCart}>
+        <button className="cart" onClick={onCart} aria-label={`Cart, ${isHome ? 0 : cartCount} items`}>
           <ShoppingCart size={23} />
-          <span>{isHome ? 0 : cartCount}</span>
+          {!isHome && cartCount > 0 ? <span>{cartCount > 99 ? "99+" : cartCount}</span> : null}
           Cart
         </button>
       </nav>
@@ -326,16 +372,7 @@ function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, product
   return (
     <>
       <CategoryNav
-        items={[
-          "New Drop",
-          "Women",
-          "Men",
-          "Children",
-          "Shoes",
-          "Bags & Accessories",
-          "Dig the Pile",
-          "Stock Drop",
-        ]}
+        items={clothingNavItems(products)}
         active="Stock Drop"
         note="ONE MARKETPLACE. TWO SHOPPING WORLDS."
         onSelect={onBrowse}
@@ -535,15 +572,6 @@ function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
   return (
     <article
       className={`product-card ${fashion ? "fashion-product-card" : "standard-product-card"} ${canAdd ? "has-card-action" : ""}`}
-      onClick={() => onOpen?.(product)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpen?.(product);
-        }
-      }}
-      role="button"
-      tabIndex={0}
     >
       <div className="product-image">
         {fashion ? (
@@ -552,16 +580,22 @@ function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
             {product.condition ? <span>{product.condition}</span> : null}
           </div>
         ) : null}
-        <img src={product.image} alt={product.name} />
+        <img src={product.image} alt={product.name} loading="lazy" onError={handleImageFallback} />
       </div>
       <div className="product-meta">
         <div>
-          <h3>{product.name}</h3>
+          {/* The title button carries a stretched overlay so the whole card is
+              clickable without nesting controls inside a role="button" card. */}
+          <h3>
+            <button className="card-open-btn" onClick={() => onOpen?.(product)}>
+              {product.name}
+            </button>
+          </h3>
           <strong>{product.price}</strong>
           {product.rating ? <span className="rating">★ {product.rating}</span> : null}
         </div>
         {fashion ? (
-          <button aria-label={`Save ${product.name}`} onClick={(event) => event.stopPropagation()}><Heart size={20} /></button>
+          <button className="card-save-btn" aria-label={`Save ${product.name}`}><Heart size={20} /></button>
         ) : null}
       </div>
       {product.stockLabel ? <span className="stock-label">{product.stockLabel}</span> : null}
@@ -643,7 +677,7 @@ function BrowsePage({ active, cardStates, category, onAddToBag, onBrowse, onOpen
     : products;
   const navItems = isHome
     ? ["Home", "Categories", "Energy Smart", "Stock Drops", "Find My Match"]
-    : ["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"];
+    : clothingNavItems(clothingCatalog);
 
   return (
     <>
@@ -672,18 +706,38 @@ function BrowsePage({ active, cardStates, category, onAddToBag, onBrowse, onOpen
             <span>{filtered.length} items</span>
             <button>Sort: Recommended <CaretDown size={14} /></button>
           </div>
-          <div className="browse-grid">
-            {filtered.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                fashion={!isHome}
-                onAddToBag={!isHome ? onAddToBag : undefined}
-                onOpen={onOpenProduct}
-                state={cardStates[product.listingId] ?? "idle"}
-              />
-            ))}
-          </div>
+          {filtered.length ? (
+            <div className="browse-grid">
+              {filtered.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  fashion={!isHome}
+                  onAddToBag={!isHome ? onAddToBag : undefined}
+                  onOpen={onOpenProduct}
+                  state={cardStates[product.listingId] ?? "idle"}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="browse-empty">
+              <strong>Nothing in {category} right now.</strong>
+              <p>
+                This rack is empty today. New thrift lands in the pile every week, so
+                check back or keep digging.
+              </p>
+              <div className="browse-empty-actions">
+                <button className="dark-btn" onClick={() => onBrowse("All Categories")}>
+                  See all clothing <ArrowRight size={17} />
+                </button>
+                {!isHome ? (
+                  <button className="ghost-btn" onClick={() => onBrowse("Dig the Pile")}>
+                    <Sparkle size={17} /> Dig the Pile
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </>
@@ -699,7 +753,7 @@ function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenPr
     <>
       <CategoryNav
         home={isHome}
-        items={isHome ? ["Home", "Categories", "Energy Smart", "Stock Drops", "Find My Match"] : ["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        items={isHome ? ["Home", "Categories", "Energy Smart", "Stock Drops", "Find My Match"] : clothingNavItems(clothingCatalog)}
         active={product.category}
         note={!isHome ? "ONE MARKETPLACE. TWO SHOPPING WORLDS." : undefined}
         onSelect={onBrowse}
@@ -707,13 +761,13 @@ function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenPr
       <section className="detail-shell">
         <button className="back-link" onClick={onBack}>Back to browsing</button>
         <div className="detail-media">
-          <img src={product.image} alt={product.name} />
+          <img src={product.image} alt={product.name} onError={handleImageFallback} />
         </div>
         <article className="detail-copy">
           <span>{product.category} / {product.condition}</span>
           <h1>{product.name}</h1>
           <strong>{product.price}</strong>
-          {product.rating ? <p className="rating">Star {product.rating}</p> : null}
+          {product.rating ? <p className="rating">★ {product.rating}</p> : null}
           <p>{product.note}</p>
           {product.stockLabel || product.sizeLabel ? (
             <div className="detail-badges">
@@ -742,7 +796,7 @@ function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenPr
           ) : null}
         </article>
         <aside className="detail-trust">
-          <div><ShieldCheck size={24} /><span>Seller verified</span><strong>{product.seller}</strong></div>
+          <div><ShieldCheck size={24} /><span>Seller verified</span><strong>{publicTrustLabel(product)}</strong></div>
           <div><MapPin size={24} /><span>Ships from</span><strong>{product.location}, Ghana</strong></div>
           <div><Truck size={24} /><span>Delivery</span><strong>Fast local delivery</strong></div>
           <div><Lock size={24} /><span>Payment</span><strong>Secure checkout</strong></div>
