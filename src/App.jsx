@@ -104,37 +104,37 @@ const catalogProductImages = {
 };
 
 const freshPileProducts = [
-  { id: "black-bomber-jacket", name: "Vintage Black Bomber Jacket", price: "GHC125", image: catalogProductImages["black-bomber-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "3XL", note: "Freshly cropped from the YINILOW pile, checked and ready for local checkout." },
-  { id: "tan-work-vest", name: "Tan Work Vest", price: "GHC95", image: catalogProductImages["tan-work-vest"], category: "Vests", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "2XL", note: "Rugged workwear vest with utility pockets and warm vintage texture." },
-  { id: "black-red-bomber", name: "Black Red Bomber Jacket", price: "GHC110", image: catalogProductImages["black-red-bomber"], category: "Jackets", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Lightweight bomber with bold red trim and a clean streetwear profile." },
-  { id: "olive-utility-vest", name: "Olive Utility Vest", price: "GHC85", image: catalogProductImages["olive-utility-vest"], category: "Vests", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Sleeveless utility layer with a soft washed finish and easy styling." },
-  { id: "navy-hooded-jacket", name: "Navy Hooded Jacket", price: "GHC140", image: catalogProductImages["navy-hooded-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Hooded everyday jacket with a strong oversized thrift feel." },
-  { id: "adidas-track-jacket", name: "Adidas Track Jacket", price: "GHC120", image: catalogProductImages["adidas-track-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Classic black-and-white track jacket, inspected for zipper and cuff wear." },
-  { id: "red-ohio-pullover", name: "Red Ohio Pullover", price: "GHC90", image: catalogProductImages["red-ohio-pullover"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Bright collegiate pullover with a clean vintage sportswear mood." },
-  { id: "blue-varsity-windbreaker", name: "Blue Varsity Windbreaker", price: "GHC115", image: catalogProductImages["blue-varsity-windbreaker"], category: "Jackets", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Royal blue varsity shell with striped cuffs and strong color pop." },
-  { id: "green-miami-windbreaker", name: "Green Miami Windbreaker", price: "GHC105", image: catalogProductImages["green-miami-windbreaker"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Green and orange windbreaker with a bold retro campus look." },
-  { id: "grey-work-jacket", name: "Grey Work Jacket", price: "GHC130", image: catalogProductImages["grey-work-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Structured work jacket with neutral color and everyday layering weight." },
-  { id: "red-rain-shell", name: "Red Rain Shell", price: "GHC80", image: catalogProductImages["red-rain-shell"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Packable red shell jacket for light rain, errands, and street styling." },
-  { id: "black-red-adidas-shell", name: "Black Red Adidas Shell", price: "GHC125", image: catalogProductImages["black-red-adidas-shell"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Sport shell jacket with sharp black-and-red blocking and zip front." },
-  { id: "stone-work-pants", name: "Stone Work Pants W46", price: "GHC110", image: catalogProductImages["stone-work-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W46", note: "Relaxed stone work pants with utility attitude and a roomy fit." },
-  { id: "blue-levis-denim", name: "Blue Levi's Denim W44", price: "GHC125", image: catalogProductImages["blue-levis-denim"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Blue Levi's denim with a straight-leg thrift profile and visible back patch." },
-  { id: "grey-work-pants", name: "Grey Work Pants W44", price: "GHC105", image: catalogProductImages["grey-work-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Grey work pants with a softened wash and daily utility fit." },
-  { id: "khaki-cargo-pants", name: "Khaki Cargo Pants W44", price: "GHC115", image: catalogProductImages["khaki-cargo-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Khaki cargo pants with roomy pockets and a relaxed secondhand feel." },
-  { id: "light-blue-denim", name: "Light Blue Denim W42", price: "GHC100", image: catalogProductImages["light-blue-denim"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W42", note: "Light blue denim with a classic worn-in wash and easy street fit." },
-  { id: "black-work-pants", name: "Black Work Pants W40", price: "GHC110", image: catalogProductImages["black-work-pants"], category: "Pants", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W40", note: "Black work pants with a clean look, utility back patch, and solid structure." },
-  { id: "olive-cargo-pants", name: "Olive Cargo Pants W40", price: "GHC105", image: catalogProductImages["olive-cargo-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W40", note: "Olive cargo pants with soft fading and pocket-heavy thrift character." },
+  { id: "black-bomber-jacket", name: "Vintage Black Bomber Jacket", price: "GHS125", image: catalogProductImages["black-bomber-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "3XL", note: "Freshly cropped from the YINILOW pile, checked and ready for local checkout." },
+  { id: "tan-work-vest", name: "Tan Work Vest", price: "GHS95", image: catalogProductImages["tan-work-vest"], category: "Vests", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "2XL", note: "Rugged workwear vest with utility pockets and warm vintage texture." },
+  { id: "black-red-bomber", name: "Black Red Bomber Jacket", price: "GHS110", image: catalogProductImages["black-red-bomber"], category: "Jackets", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Lightweight bomber with bold red trim and a clean streetwear profile." },
+  { id: "olive-utility-vest", name: "Olive Utility Vest", price: "GHS85", image: catalogProductImages["olive-utility-vest"], category: "Vests", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Sleeveless utility layer with a soft washed finish and easy styling." },
+  { id: "navy-hooded-jacket", name: "Navy Hooded Jacket", price: "GHS140", image: catalogProductImages["navy-hooded-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Hooded everyday jacket with a strong oversized thrift feel." },
+  { id: "adidas-track-jacket", name: "Adidas Track Jacket", price: "GHS120", image: catalogProductImages["adidas-track-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "XL", note: "Classic black-and-white track jacket, inspected for zipper and cuff wear." },
+  { id: "red-ohio-pullover", name: "Red Ohio Pullover", price: "GHS90", image: catalogProductImages["red-ohio-pullover"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Bright collegiate pullover with a clean vintage sportswear mood." },
+  { id: "blue-varsity-windbreaker", name: "Blue Varsity Windbreaker", price: "GHS115", image: catalogProductImages["blue-varsity-windbreaker"], category: "Jackets", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Royal blue varsity shell with striped cuffs and strong color pop." },
+  { id: "green-miami-windbreaker", name: "Green Miami Windbreaker", price: "GHS105", image: catalogProductImages["green-miami-windbreaker"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Green and orange windbreaker with a bold retro campus look." },
+  { id: "grey-work-jacket", name: "Grey Work Jacket", price: "GHS130", image: catalogProductImages["grey-work-jacket"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Structured work jacket with neutral color and everyday layering weight." },
+  { id: "red-rain-shell", name: "Red Rain Shell", price: "GHS80", image: catalogProductImages["red-rain-shell"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Packable red shell jacket for light rain, errands, and street styling." },
+  { id: "black-red-adidas-shell", name: "Black Red Adidas Shell", price: "GHS125", image: catalogProductImages["black-red-adidas-shell"], category: "Jackets", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "L", note: "Sport shell jacket with sharp black-and-red blocking and zip front." },
+  { id: "stone-work-pants", name: "Stone Work Pants W46", price: "GHS110", image: catalogProductImages["stone-work-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W46", note: "Relaxed stone work pants with utility attitude and a roomy fit." },
+  { id: "blue-levis-denim", name: "Blue Levi's Denim W44", price: "GHS125", image: catalogProductImages["blue-levis-denim"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Blue Levi's denim with a straight-leg thrift profile and visible back patch." },
+  { id: "grey-work-pants", name: "Grey Work Pants W44", price: "GHS105", image: catalogProductImages["grey-work-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Grey work pants with a softened wash and daily utility fit." },
+  { id: "khaki-cargo-pants", name: "Khaki Cargo Pants W44", price: "GHS115", image: catalogProductImages["khaki-cargo-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W44", note: "Khaki cargo pants with roomy pockets and a relaxed secondhand feel." },
+  { id: "light-blue-denim", name: "Light Blue Denim W42", price: "GHS100", image: catalogProductImages["light-blue-denim"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W42", note: "Light blue denim with a classic worn-in wash and easy street fit." },
+  { id: "black-work-pants", name: "Black Work Pants W40", price: "GHS110", image: catalogProductImages["black-work-pants"], category: "Pants", condition: "Very good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W40", note: "Black work pants with a clean look, utility back patch, and solid structure." },
+  { id: "olive-cargo-pants", name: "Olive Cargo Pants W40", price: "GHS105", image: catalogProductImages["olive-cargo-pants"], category: "Pants", condition: "Good", seller: "YINILOW Pile", location: "Accra", sizeLabel: "W40", note: "Olive cargo pants with soft fading and pocket-heavy thrift character." },
 ];
 
 const clothingProducts = [
   ...freshPileProducts,
-  { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHC150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "YINILOW Verified", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
-  { id: "camo-cargo", name: "Camo Cargo Pants", price: "GHC90", image: prodCargo, category: "Men", condition: "Good", seller: "YINILOW Verified", location: "Kumasi", note: "Utility cargo fit with checked seams and secure pockets." },
-  { id: "air-jordan", name: "Air Jordan 1 Chicago (Used)", price: "GHC250", image: prodJordan, category: "Shoes", condition: "Used", seller: "YINILOW Verified", location: "Accra", note: "Authenticated pair with visible wear and photo evidence." },
-  { id: "y2k-bag", name: "Y2K Shoulder Bag", price: "GHC75", image: prodBag, category: "Bags & Accessories", condition: "Very good", seller: "YINILOW Verified", location: "Tema", note: "Compact black shoulder bag with inspected zipper and strap." },
-  { id: "windbreaker", name: "Adidas Windbreaker", price: "GHC55", image: prodWindbreaker, category: "Men", condition: "Good", seller: "YINILOW Verified", location: "Accra", note: "Blue windbreaker, lightweight, checked for stains and tears." },
-  { id: "rugby-shirt", name: "Vintage Rugby Shirt", price: "GHC60", image: prodRugby, category: "Women", condition: "Very good", seller: "YINILOW Verified", location: "Cape Coast", note: "Striped rugby shirt with strong color and verified measurements." },
-  { id: "graphic-tee", name: "Graphic Print Tee", price: "GHC25", image: prodTee, category: "New Drop", condition: "Good", seller: "YINILOW Verified", location: "Accra", note: "Soft graphic tee, washed, inspected, and ready to ship." },
-  { id: "retro-sunglasses", name: "Retro Sunglasses", price: "GHC25", image: prodSunglasses, category: "Bags & Accessories", condition: "Excellent", seller: "YINILOW Verified", location: "Tema", note: "Lightweight retro frame with clean lenses and case-ready packaging." },
+  { id: "leather-jacket", name: "Vintage Leather Jacket", price: "GHS150", image: prodLeather, category: "New Drop", condition: "Very good", seller: "YINILOW Verified", location: "Accra", note: "One-of-one leather layer with clean lining and light wear." },
+  { id: "camo-cargo", name: "Camo Cargo Pants", price: "GHS90", image: prodCargo, category: "Men", condition: "Good", seller: "YINILOW Verified", location: "Kumasi", note: "Utility cargo fit with checked seams and secure pockets." },
+  { id: "air-jordan", name: "Air Jordan 1 Chicago (Used)", price: "GHS250", image: prodJordan, category: "Shoes", condition: "Used", seller: "YINILOW Verified", location: "Accra", note: "Authenticated pair with visible wear and photo evidence." },
+  { id: "y2k-bag", name: "Y2K Shoulder Bag", price: "GHS75", image: prodBag, category: "Bags & Accessories", condition: "Very good", seller: "YINILOW Verified", location: "Tema", note: "Compact black shoulder bag with inspected zipper and strap." },
+  { id: "windbreaker", name: "Adidas Windbreaker", price: "GHS55", image: prodWindbreaker, category: "Men", condition: "Good", seller: "YINILOW Verified", location: "Accra", note: "Blue windbreaker, lightweight, checked for stains and tears." },
+  { id: "rugby-shirt", name: "Vintage Rugby Shirt", price: "GHS60", image: prodRugby, category: "Women", condition: "Very good", seller: "YINILOW Verified", location: "Cape Coast", note: "Striped rugby shirt with strong color and verified measurements." },
+  { id: "graphic-tee", name: "Graphic Print Tee", price: "GHS25", image: prodTee, category: "New Drop", condition: "Good", seller: "YINILOW Verified", location: "Accra", note: "Soft graphic tee, washed, inspected, and ready to ship." },
+  { id: "retro-sunglasses", name: "Retro Sunglasses", price: "GHS25", image: prodSunglasses, category: "Bags & Accessories", condition: "Excellent", seller: "YINILOW Verified", location: "Tema", note: "Lightweight retro frame with clean lenses and case-ready packaging." },
 ];
 
 const listingImageById = {
@@ -275,14 +275,14 @@ function formatCountdown(value) {
 }
 
 const dropProducts = [
-  { ...clothingProducts[4], grabPrice: "GHC38", retail: "GHC65", net: "GHC53", left: "1 left" },
-  { ...clothingProducts[5], name: "Vintage striped polo", grabPrice: "GHC38", retail: "GHC65", net: "GHC53", left: "2 left" },
-  { ...clothingProducts[6], name: "Vintage graphic tee", grabPrice: "GHC28", retail: "GHC55", net: "GHC44", left: "1 left" },
-  { ...clothingProducts[1], name: "90s street bundle (5 pcs)", grabPrice: "GHC120", retail: "GHC210", net: "GHC168", left: "3 left" },
-  { ...clothingProducts[2], grabPrice: "GHC290", retail: "GHC480", net: "GHC382", left: "1 left" },
-  { ...clothingProducts[3], name: "Leather shoulder bag", grabPrice: "GHC75", retail: "GHC150", net: "GHC119", left: "1 left" },
-  { ...clothingProducts[0], name: "Leather jacket", grabPrice: "GHC85", retail: "GHC150", net: "GHC119", left: "1 left" },
-  { ...clothingProducts[7], name: "Retro sunglasses set", grabPrice: "GHC25", retail: "GHC50", net: "GHC39", left: "2 left" },
+  { ...clothingProducts[4], grabPrice: "GHS38", retail: "GHS65", net: "GHS53", left: "1 left" },
+  { ...clothingProducts[5], name: "Vintage striped polo", grabPrice: "GHS38", retail: "GHS65", net: "GHS53", left: "2 left" },
+  { ...clothingProducts[6], name: "Vintage graphic tee", grabPrice: "GHS28", retail: "GHS55", net: "GHS44", left: "1 left" },
+  { ...clothingProducts[1], name: "90s street bundle (5 pcs)", grabPrice: "GHS120", retail: "GHS210", net: "GHS168", left: "3 left" },
+  { ...clothingProducts[2], grabPrice: "GHS290", retail: "GHS480", net: "GHS382", left: "1 left" },
+  { ...clothingProducts[3], name: "Leather shoulder bag", grabPrice: "GHS75", retail: "GHS150", net: "GHS119", left: "1 left" },
+  { ...clothingProducts[0], name: "Leather jacket", grabPrice: "GHS85", retail: "GHS150", net: "GHS119", left: "1 left" },
+  { ...clothingProducts[7], name: "Retro sunglasses set", grabPrice: "GHS25", retail: "GHS50", net: "GHS39", left: "2 left" },
 ];
 
 const homeEnergy = [
@@ -373,7 +373,7 @@ function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, product
     <>
       <CategoryNav
         items={clothingNavItems(products)}
-        active="Stock Drop"
+        active={null}
         note="ONE MARKETPLACE. TWO SHOPPING WORLDS."
         onSelect={onBrowse}
       />
@@ -506,7 +506,12 @@ function CategoryNav({ items, active, note, home, onSelect }) {
     <div className={home ? "category-nav home-nav" : "category-nav"}>
       <nav>
         {items.map((item) => (
-          <button className={item === active ? "active" : ""} key={item} onClick={() => onSelect?.(item)}>
+          <button
+            className={item === active ? "active" : ""}
+            aria-current={item === active ? "page" : undefined}
+            key={item}
+            onClick={() => onSelect?.(item)}
+          >
             {home && item === "Home" ? <House size={19} /> : null}
             {home && item === "Find My Match" ? <Shuffle size={18} /> : null}
             {item}
@@ -561,7 +566,16 @@ function ToastNotice({ toast, onClose }) {
 
 function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
   const canAdd = Boolean(onAddToBag && product.listingId);
-  const actionLabel = state === "adding" ? "Adding..." : state === "added" ? "Added" : state === "failed" ? "Try again" : "Add to bag";
+  const actionLabel =
+    state === "adding"
+      ? "Adding..."
+      : state === "added"
+      ? "Added"
+      : state === "conflict"
+      ? "Unavailable"
+      : state === "failed"
+      ? "Try again"
+      : "Add to bag";
   const sizeText = product.sizeLabel ? `Size ${product.sizeLabel}` : product.category;
 
   function handleAdd(event) {
@@ -603,7 +617,7 @@ function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
         <button
           className={`card-add-btn ${state}`}
           aria-label={`${actionLabel} ${product.name} to bag`}
-          disabled={state === "adding" || state === "added"}
+          disabled={state === "adding" || state === "added" || state === "conflict"}
           onClick={handleAdd}
         >
           {actionLabel}
@@ -744,9 +758,10 @@ function BrowsePage({ active, cardStates, category, onAddToBag, onBrowse, onOpen
   );
 }
 
-function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenProduct, clothingCatalog, onAddToBag, bagState }) {
+function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenProduct, clothingCatalog, onAddToBag }) {
   const isHome = active === "home";
   const canAdd = active === "clothing" && Boolean(product.listingId);
+  const cardState = cardStates[product.listingId] ?? "idle";
   const related = (isHome ? allHomeProducts : clothingCatalog).filter((item) => item.id !== product.id).slice(0, 4);
 
   return (
@@ -783,15 +798,28 @@ function ProductDetail({ active, cardStates, product, onBack, onBrowse, onOpenPr
             </div>
           ) : null}
           <div className="detail-actions">
-            <button className="dark-btn" disabled={bagState === "adding" || bagState === "held"} onClick={() => onAddToBag(product)}>
-              {bagState === "adding" ? "Holding..." : bagState === "held" ? "Added" : canAdd ? "Add to bag" : "Preview only"} <ArrowRight size={18} />
+            <button
+              className="dark-btn"
+              disabled={cardState === "adding" || cardState === "added" || cardState === "conflict"}
+              onClick={() => onAddToBag(product)}
+            >
+              {cardState === "adding"
+                ? "Holding..."
+                : cardState === "added"
+                ? "Added"
+                : cardState === "conflict"
+                ? "Unavailable"
+                : canAdd
+                ? "Add to bag"
+                : "Preview only"}{" "}
+              <ArrowRight size={18} />
             </button>
             <button className="ghost-btn"><Heart size={18} /> Save</button>
           </div>
-          {bagState === "held" ? (
+          {cardState === "added" ? (
             <p className="hold-message">Held for 10 minutes. Checkout before the timer runs out.</p>
           ) : null}
-          {bagState === "conflict" ? (
+          {cardState === "conflict" ? (
             <p className="hold-message warning">Someone already has this in their bag. Save it or find similar.</p>
           ) : null}
         </article>
@@ -1874,25 +1902,25 @@ function useDigPileRealtime() {
   return { activity, connectionState, latencyMs, trackTag, viewerCount };
 }
 
-function DigPilePage({ onBrowse, onOpenProduct }) {
+function DigPilePage({ onBrowse, onOpenProduct, clothingCatalog = [] }) {
   const realtime = useDigPileRealtime();
   const featured = clothingProducts[5];
   const tags = [
-    ["GHC55", "pile-tag tag-hat"],
-    ["GHC110", "pile-tag tag-jacket"],
-    ["GHC95", "pile-tag tag-jeans"],
-    ["GHC85", "pile-tag tag-tee"],
-    ["GHC75", "pile-tag tag-bag"],
-    ["GHC180", "pile-tag tag-shoe"],
-    ["GHC150", "pile-tag tag-leather"],
-    ["GHC45", "pile-tag tag-cap"],
+    ["GHS55", "pile-tag tag-hat"],
+    ["GHS110", "pile-tag tag-jacket"],
+    ["GHS95", "pile-tag tag-jeans"],
+    ["GHS85", "pile-tag tag-tee"],
+    ["GHS75", "pile-tag tag-bag"],
+    ["GHS180", "pile-tag tag-shoe"],
+    ["GHS150", "pile-tag tag-leather"],
+    ["GHS45", "pile-tag tag-cap"],
   ];
 
   return (
     <>
       <CategoryNav
-        items={["New Drop", "Clothes", "Shoes", "Sellers", "Stock Drop"]}
-        active="Stock Drop"
+        items={clothingNavItems(clothingCatalog)}
+        active="Dig the Pile"
         note="DIG DEEP. TAP ANYTHING."
         onSelect={onBrowse}
       />
@@ -1926,7 +1954,7 @@ function DigPilePage({ onBrowse, onOpenProduct }) {
           ))}
           <article className="pile-quick-card">
             <h2>{featured.name}</h2>
-            <strong>GHC85</strong>
+            <strong>GHS85</strong>
             <span>Only 1 left</span>
             <div>
               <button aria-label={`Save ${featured.name}`}><Heart size={22} /></button>
@@ -1940,12 +1968,12 @@ function DigPilePage({ onBrowse, onOpenProduct }) {
   );
 }
 
-function StockDropPage({ onBrowse, onOpenProduct }) {
+function StockDropPage({ onBrowse, onOpenProduct, clothingCatalog = [] }) {
   const schedule = [
-    ["Vintage Heatwave", "Streetwear + Vintage", "Ajourd'hui, 6:00 PM", "08:42:31", clothingProducts[0].image],
-    ["90s Sports Classics", "Sportswear + Retro", "Ajourd'hui, 8:00 PM", "10:42:31", clothingProducts[2].image],
-    ["Designer Grails", "Luxury + Premium", "Demain, 12:00 PM", "1D 02:42:31", clothingProducts[3].image],
-    ["Y2K Essentials", "Y2K + Streetwear", "Demain, 3:00 PM", "1D 05:42:31", clothingProducts[6].image],
+    ["Vintage Heatwave", "Streetwear + Vintage", "Today, 6:00 PM", "08:42:31", clothingProducts[0].image],
+    ["90s Sports Classics", "Sportswear + Retro", "Today, 8:00 PM", "10:42:31", clothingProducts[2].image],
+    ["Designer Grails", "Luxury + Premium", "Tomorrow, 12:00 PM", "1D 02:42:31", clothingProducts[3].image],
+    ["Y2K Essentials", "Y2K + Streetwear", "Tomorrow, 3:00 PM", "1D 05:42:31", clothingProducts[6].image],
   ];
   const recap = [
     ["Urban Essentials", "May 25, 2025", [prodLeather, prodCargo, prodBag], "48/48"],
@@ -1956,7 +1984,7 @@ function StockDropPage({ onBrowse, onOpenProduct }) {
   return (
     <>
       <CategoryNav
-        items={["New Drop", "Women", "Men", "Children", "Shoes", "Bags & Accessories", "Dig the Pile", "Stock Drop"]}
+        items={clothingNavItems(clothingCatalog)}
         active="Stock Drop"
         note="LIVE DROPS. FIRST COME, FIRST GRAB."
         onSelect={onBrowse}
@@ -2235,8 +2263,8 @@ export function App() {
   const [screen, setScreen] = useState({ type: "home", category: null, product: null });
   const [apiProducts, setApiProducts] = useState([]);
   const [apiStatus, setApiStatus] = useState("fallback");
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [cartCount, setCartCount] = useState(0);
-  const [bagState, setBagState] = useState("idle");
   const [cardStates, setCardStates] = useState({});
   const [createdOrder, setCreatedOrder] = useState(null);
   const [toast, setToast] = useState(null);
@@ -2263,6 +2291,11 @@ export function App() {
           setApiProducts([]);
           setApiStatus("fallback");
         }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setCatalogLoading(false);
+        }
       });
 
     getCart()
@@ -2287,7 +2320,6 @@ export function App() {
   const switchWorld = (world) => {
     setActive(world);
     setScreen({ type: "home", category: null, product: null });
-    setBagState("idle");
   };
   const browse = (category) => {
     if (category === "Home") {
@@ -2307,30 +2339,24 @@ export function App() {
       return;
     }
     setScreen({ type: "browse", category, product: null });
-    setBagState("idle");
   };
   const openProduct = (product) => {
-    setBagState("idle");
     setScreen({ type: "product", category: product.category, product });
   };
   const openCart = () => {
     setActive("clothing");
-    setBagState("idle");
     setScreen({ type: "cart", category: "Bag", product: null });
   };
   const openCheckout = () => {
     setActive("clothing");
-    setBagState("idle");
     setScreen({ type: "checkout", category: "Checkout", product: null });
   };
   const openSeller = () => {
     setActive("clothing");
-    setBagState("idle");
     setScreen({ type: "seller", category: "Seller", product: null });
   };
   const openTracking = (order = null) => {
     setActive("clothing");
-    setBagState("idle");
     setScreen({ type: "tracking", category: "Track", product: null, order });
   };
   const showOrderCreated = (order) => {
@@ -2339,31 +2365,41 @@ export function App() {
   };
   const holdProduct = async (product) => {
     if (active !== "clothing" || !product.listingId) {
-      setBagState("idle");
       setToast({ type: "warning", title: "Preview only", message: "This item is not connected to live checkout yet." });
       return;
     }
     const cardKey = product.listingId;
-    setBagState("held");
-    setCardStates((states) => ({ ...states, [cardKey]: "added" }));
-    setCartCount((count) => count + 1);
-    setToast({ type: "success", title: "Added to bag", message: `${product.name} is being confirmed now.` });
+    // Ignore repeat taps while a hold is already in flight for this listing so a
+    // double-click can never fire two mutations for the same intent.
+    if (cardStates[cardKey] === "adding") return;
+    // One stable idempotency key per add action; a transient retry reuses it.
+    const idempotencyKey = `add-${cardKey}-${Date.now()}`;
+    setCardStates((states) => ({ ...states, [cardKey]: "adding" }));
     try {
-      await addToBag(product.listingId);
+      await addToBag(product.listingId, idempotencyKey);
+      // Commit UI success only after the server confirms the hold, then reconcile
+      // the cart count from the server rather than trusting an optimistic guess.
+      setCardStates((states) => ({ ...states, [cardKey]: "added" }));
+      try {
+        const cart = await getCart();
+        setCartCount(cart.items?.length ?? 0);
+      } catch {
+        /* leave the last known cart count if the refresh fails */
+      }
       setToast({ type: "success", title: "Added to bag", message: `${product.name} is held for 10 minutes.` });
     } catch (error) {
       const conflict = error.status === 409;
-      setBagState(conflict ? "conflict" : "idle");
-      setCartCount((count) => Math.max(0, count - 1));
-      setCardStates((states) => ({ ...states, [cardKey]: "failed" }));
+      setCardStates((states) => ({ ...states, [cardKey]: conflict ? "conflict" : "failed" }));
       setToast({
         type: "warning",
         title: conflict ? "Already held" : "Could not add",
         message: conflict ? "Someone already has this item in their bag." : "Please try again in a moment.",
       });
-      window.setTimeout(() => {
-        setCardStates((states) => (states[cardKey] === "failed" ? { ...states, [cardKey]: "idle" } : states));
-      }, 2800);
+      if (!conflict) {
+        window.setTimeout(() => {
+          setCardStates((states) => (states[cardKey] === "failed" ? { ...states, [cardKey]: "idle" } : states));
+        }, 2800);
+      }
     }
   };
   const page = useMemo(() => {
@@ -2371,7 +2407,7 @@ export function App() {
       return <BrowsePage active={active} cardStates={cardStates} category={screen.category} onAddToBag={holdProduct} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
     }
     if (screen.type === "product" && screen.product) {
-      return <ProductDetail active={active} cardStates={cardStates} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} bagState={bagState} />;
+      return <ProductDetail active={active} cardStates={cardStates} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} />;
     }
     if (screen.type === "cart") {
       return <CartPage onBrowse={browse} onOpenProduct={openProduct} onCheckout={openCheckout} refreshCartCount={setCartCount} />;
@@ -2389,10 +2425,10 @@ export function App() {
       return <SellerConsolePage onCreated={openProduct} refreshListings={refreshListings} />;
     }
     if (screen.type === "dig") {
-      return <DigPilePage onBrowse={browse} onOpenProduct={openProduct} />;
+      return <DigPilePage onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
     }
     if (screen.type === "stockDrop") {
-      return <StockDropPage onBrowse={browse} onOpenProduct={openProduct} />;
+      return <StockDropPage onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
     }
     if (screen.type === "findMatch") {
       return <FindMatchPage onBrowse={browse} onOpenProduct={openProduct} />;
@@ -2400,14 +2436,17 @@ export function App() {
     return active === "home"
       ? <HomePage onBrowse={browse} onOpenProduct={openProduct} />
       : <ClothingPage cardStates={cardStates} onAddToBag={holdProduct} onBrowse={browse} onOpenProduct={openProduct} products={clothingCatalog} />;
-  }, [active, screen, clothingCatalog, bagState, createdOrder, cardStates]);
+  }, [active, screen, clothingCatalog, createdOrder, cardStates]);
 
   return (
     <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>
       <Header active={active} setActive={switchWorld} cartCount={cartCount} onCart={openCart} onSeller={openSeller} onTrack={() => openTracking()} />
-      {active === "clothing" ? (
-        <div className="api-status">
-          {apiStatus === "connected" ? "Live catalog connected" : "Prototype catalog fallback"}
+      {active === "clothing" && catalogLoading ? (
+        <div className="api-status loading" role="status">Loading live catalog…</div>
+      ) : null}
+      {active === "clothing" && !catalogLoading && apiStatus !== "connected" ? (
+        <div className="api-status offline" role="status">
+          Showing an offline preview catalog — live holds and checkout are unavailable.
         </div>
       ) : null}
       {toast ? <ToastNotice toast={toast} onClose={() => setToast(null)} /> : null}
