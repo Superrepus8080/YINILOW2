@@ -110,11 +110,11 @@ export function recordRealtimeTelemetry(event) {
   }).catch(() => null);
 }
 
-export function addToBag(listingId) {
+export function addToBag(listingId, idempotencyKey = `add-${listingId}-${Date.now()}`) {
   return request("/api/v1/cart/items", {
     method: "POST",
     headers: {
-      "x-idempotency-key": `add-${listingId}-${Date.now()}`,
+      "x-idempotency-key": idempotencyKey,
     },
     body: JSON.stringify({
       listingId,

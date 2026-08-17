@@ -222,6 +222,7 @@ button {
 
 .api-status {
   width: max-content;
+  max-width: min(100%, 640px);
   margin: 8px 0 0 auto;
   border: 1px solid #e7dfd4;
   border-radius: 999px;
@@ -232,6 +233,19 @@ button {
   font-size: 10px;
   font-weight: 900;
   letter-spacing: .05em;
+}
+
+.api-status.loading {
+  color: #6b6357;
+}
+
+.api-status.offline {
+  border-color: #f0c98a;
+  background: #fff6e6;
+  color: #7a5218;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 700;
 }
 
 .toast-notice {
