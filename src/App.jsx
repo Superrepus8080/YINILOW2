@@ -309,8 +309,9 @@ function Logo() {
   );
 }
 
-function Header({ active, setActive, cartCount = 0, onCart, onSeller, onTrack }) {
+function Header({ active, setActive, cartCount = 0, onCart, onSeller, onTrack, onSearch }) {
   const isHome = active === "home";
+  const [query, setQuery] = useState("");
   return (
     <header className="topbar">
       <Logo />
@@ -328,20 +329,30 @@ function Header({ active, setActive, cartCount = 0, onCart, onSeller, onTrack })
           Home & Electronics
         </button>
       </div>
-      <label className="search">
-        <span className="visually-hidden">
+      <form
+        className="search"
+        role="search"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSearch?.(query);
+        }}
+      >
+        <label className="visually-hidden" htmlFor="site-search">
           {isHome ? "Search home and electronics" : "Search clothing and accessories"}
-        </span>
+        </label>
         <MagnifyingGlass size={22} aria-hidden="true" />
         <input
+          id="site-search"
           type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
           placeholder={
             isHome
               ? "Search appliances, decor & electronics..."
               : "Search clothing, shoes and accessories..."
           }
         />
-      </label>
+      </form>
       <nav className="utility-nav">
         <button>
           <MapPin size={22} /> Ghana <CaretDown size={12} />
@@ -402,7 +413,7 @@ function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, product
           [Lock, "Secure & easy", "Safe payments. Fast checkout."],
         ]}
       />
-      <PromoTiles />
+      <PromoTiles onSelect={onBrowse} />
       <SectionTitle title="Featured products" onAction={() => onBrowse("All Categories")} />
       <div className="product-grid clothing-grid">
         {products.map((product) => (
@@ -431,19 +442,24 @@ function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, product
   );
 }
 
-function PromoTiles() {
+function PromoTiles({ onSelect }) {
   const tiles = [
-    ["New Drop", "Fresh pieces. Every week.", "Shop now", clothingNewdrop],
-    ["Trending Pieces", "See what's hot. Shop trending.", "Shop trending", clothingBag],
-    ["Shop by Category", "Find your perfect fit.", "Browse all", clothingJacketTile],
-    ["Curated Looks", "Styled by us. Worn by you.", "Get inspired", clothingLooks],
-    ["Dig the Pile", "Hidden gems. Big energy.", "Dig in", clothingDigPile],
+    ["New Drop", "Fresh pieces. Every week.", "Shop now", clothingNewdrop, "New Drop"],
+    ["Trending Pieces", "See what's hot. Shop trending.", "Shop trending", clothingBag, "All Categories"],
+    ["Shop by Category", "Find your perfect fit.", "Browse all", clothingJacketTile, "All Categories"],
+    ["Curated Looks", "Styled by us. Worn by you.", "Get inspired", clothingLooks, "All Categories"],
+    ["Dig the Pile", "Hidden gems. Big energy.", "Dig in", clothingDigPile, "Dig the Pile"],
   ];
   return (
     <div className="promo-grid">
-      {tiles.map(([title, body, cta, image], index) => (
+      {tiles.map(([title, body, cta, image, target], index) => (
         <article className={index === 4 ? "promo-card source-tile accent" : "promo-card source-tile"} key={title}>
           <img src={image} alt={`${title}: ${body} ${cta}`} />
+          <button
+            className="promo-open-btn"
+            aria-label={`${title} — ${cta}`}
+            onClick={() => onSelect?.(target)}
+          />
         </article>
       ))}
     </div>
@@ -683,12 +699,61 @@ function ProductRail({ title, products, onAddToBag, onOpenProduct, onViewAll, ca
   );
 }
 
-function BrowsePage({ active, cardStates, category, onAddToBag, onBrowse, onOpenProduct, clothingCatalog }) {
+function BrowsePage({ active, cardStates, category, query, onAddToBag, onBrowse, onOpenProduct, clothingCatalog }) {
   const isHome = active === "home";
   const products = isHome ? allHomeProducts : clothingCatalog;
-  const filtered = category && !["All Categories", "Categories", "Top Picks", "Home"].includes(category)
-    ? products.filter((product) => product.category === category || category === "Stock Drop" || category === "Stock Drops" || category === "Dig the Pile")
-    : products;
+  const isSearch = category === "Search";
+  const [sort, setSort] = useState("recommended");
+  const [activeFilters, setActiveFilters] = useState([]);
+
+  const priceValue = (product) => Number(String(product.price).replace(/[^0-9.]/g, "")) || 0;
+
+  // Filters that actually narrow the grid. Unlisted labels act as no-ops so the
+  // toggles still give feedback without hiding everything.
+  const filterPredicates = {
+    "One-of-ones": (product) => !product.stockLabel || /only\s*1/i.test(product.stockLabel),
+    "Fresh drop": (product) => product.category === "New Drop",
+  };
+
+  const toggleFilter = (label) =>
+    setActiveFilters((current) =>
+      current.includes(label) ? current.filter((entry) => entry !== label) : [...current, label],
+    );
+
+  let results = products;
+  if (isSearch) {
+    const needle = (query ?? "").toLowerCase();
+    results = products.filter((product) =>
+      [product.name, product.category, product.condition, product.sizeLabel]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(needle)),
+    );
+  } else if (category && !["All Categories", "Categories", "Top Picks", "Home"].includes(category)) {
+    results = products.filter(
+      (product) =>
+        product.category === category ||
+        category === "Stock Drop" ||
+        category === "Stock Drops" ||
+        category === "Dig the Pile",
+    );
+  }
+
+  results = results.filter((product) =>
+    activeFilters.every((label) => (filterPredicates[label] ? filterPredicates[label](product) : true)),
+  );
+
+  if (sort === "price-asc") {
+    results = [...results].sort((a, b) => priceValue(a) - priceValue(b));
+  } else if (sort === "price-desc") {
+    results = [...results].sort((a, b) => priceValue(b) - priceValue(a));
+  }
+
+  const filtered = results;
+  const filterLabels = isHome
+    ? ["Verified sellers", "Ready to ship", "Warranty eligible", "Energy smart"]
+    : ["Verified sellers", "Ready to ship", "One-of-ones", "Fresh drop"];
+  const heading = isSearch ? `Search: “${query}”` : category || "All Categories";
+
   const navItems = isHome
     ? ["Home", "Categories", "Energy Smart", "Stock Drops", "Find My Match"]
     : clothingNavItems(clothingCatalog);
@@ -698,27 +763,40 @@ function BrowsePage({ active, cardStates, category, onAddToBag, onBrowse, onOpen
       <CategoryNav
         home={isHome}
         items={navItems}
-        active={category || (isHome ? "Categories" : "New Drop")}
+        active={isSearch ? null : category || (isHome ? "Categories" : "New Drop")}
         note={!isHome ? "ONE MARKETPLACE. TWO SHOPPING WORLDS." : undefined}
         onSelect={onBrowse}
       />
       <section className="browse-shell">
         <div className="browse-heading">
           <span>{isHome ? "Home & Electronics" : "Clothing & Accessories"}</span>
-          <h1>{category || "All Categories"}</h1>
+          <h1>{heading}</h1>
           <p>{isHome ? "Energy-smart essentials, appliances, electronics, and home picks." : "Fresh thrift, accessories, shoes, drops, and curated pile finds."}</p>
         </div>
         <aside className="filter-panel">
           <strong>Filters</strong>
-          <button className="selected">Verified sellers</button>
-          <button>Ready to ship</button>
-          <button>{isHome ? "Warranty eligible" : "One-of-ones"}</button>
-          <button>{isHome ? "Energy smart" : "Fresh drop"}</button>
+          {filterLabels.map((label) => (
+            <button
+              key={label}
+              className={activeFilters.includes(label) ? "selected" : ""}
+              aria-pressed={activeFilters.includes(label)}
+              onClick={() => toggleFilter(label)}
+            >
+              {label}
+            </button>
+          ))}
         </aside>
         <div className="browse-results">
           <div className="browse-toolbar">
             <span>{filtered.length} items</span>
-            <button>Sort: Recommended <CaretDown size={14} /></button>
+            <label className="sort-control">
+              <span>Sort:</span>
+              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+                <option value="recommended">Recommended</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+            </label>
           </div>
           {filtered.length ? (
             <div className="browse-grid">
@@ -735,7 +813,7 @@ function BrowsePage({ active, cardStates, category, onAddToBag, onBrowse, onOpen
             </div>
           ) : (
             <div className="browse-empty">
-              <strong>Nothing in {category} right now.</strong>
+              <strong>{isSearch ? `Nothing found for “${query}”.` : `Nothing in ${category} right now.`}</strong>
               <p>
                 This rack is empty today. New thrift lands in the pile every week, so
                 check back or keep digging.
@@ -2205,11 +2283,23 @@ function FindMatchPage({ onBrowse, onOpenProduct }) {
   );
 }
 
-function Footer({ active }) {
+function Footer({ active, onBrowse, onTrack }) {
   const isHome = active === "home";
   const shopLinks = isHome
     ? ["All Categories", "Energy Smart", "Stock Drops", "New Arrivals", "Top Picks"]
     : ["All Categories", "New Drop", "Trending Pieces", "Dig the Pile", "Stock Drop", "Gift Cards"];
+  const actions = {
+    "All Categories": () => onBrowse?.("All Categories"),
+    "New Drop": () => onBrowse?.("New Drop"),
+    "New Arrivals": () => onBrowse?.("New Drop"),
+    "Trending Pieces": () => onBrowse?.("All Categories"),
+    "Top Picks": () => onBrowse?.("All Categories"),
+    "Dig the Pile": () => onBrowse?.("Dig the Pile"),
+    "Stock Drop": () => onBrowse?.("Stock Drop"),
+    "Stock Drops": () => onBrowse?.("Stock Drop"),
+    "Energy Smart": () => onBrowse?.("All Categories"),
+    "Track My Order": () => onTrack?.(),
+  };
   return (
     <footer className="footer">
       <div>
@@ -2222,9 +2312,9 @@ function Footer({ active }) {
           <Circle size={17} />
         </div>
       </div>
-      <FooterColumn title="Shop" items={shopLinks} />
-      <FooterColumn title="Help & Support" items={["Help Center", "Track My Order", "Shipping & Delivery", "Returns & Refunds", "Contact Us"]} />
-      <FooterColumn title="About Yinilow" items={["About Us", "Careers", "News & Press", "Terms", "Privacy"]} />
+      <FooterColumn title="Shop" items={shopLinks} actions={actions} />
+      <FooterColumn title="Help & Support" items={["Help Center", "Track My Order", "Shipping & Delivery", "Returns & Refunds", "Contact Us"]} actions={actions} />
+      <FooterColumn title="About Yinilow" items={["About Us", "Careers", "News & Press", "Terms", "Privacy"]} actions={actions} />
       <div className="newsletter">
         <h4>Stay Connected</h4>
         <p>Get deals, drops & energy smart tips straight to your inbox.</p>
@@ -2245,13 +2335,19 @@ function Footer({ active }) {
   );
 }
 
-function FooterColumn({ title, items }) {
+function FooterColumn({ title, items, actions = {} }) {
   return (
     <div>
       <h4>{title}</h4>
       <ul>
         {items.map((item) => (
-          <li key={item}>{item}</li>
+          <li key={item}>
+            {actions[item] ? (
+              <button className="footer-link" onClick={actions[item]}>{item}</button>
+            ) : (
+              item
+            )}
+          </li>
         ))}
       </ul>
     </div>
@@ -2326,6 +2422,40 @@ export function App() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  // The app has no URL router, so keep browser history in sync manually. Each
+  // in-app navigation pushes an entry; the browser/hardware Back button then
+  // restores the previous screen instead of leaving the site entirely.
+  const skipHistoryPush = useRef(false);
+  useEffect(() => {
+    const entry = { __yinilow: true, screen, active };
+    if (!skipHistoryPush.current && window.history.state?.__yinilow) {
+      window.history.pushState(entry, "");
+    } else {
+      window.history.replaceState(entry, "");
+    }
+    skipHistoryPush.current = false;
+  }, [screen, active]);
+
+  useEffect(() => {
+    const onPopState = (event) => {
+      if (event.state?.__yinilow) {
+        skipHistoryPush.current = true;
+        setActive(event.state.active ?? "clothing");
+        setScreen(event.state.screen ?? { type: "home", category: null, product: null });
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const goBack = () => {
+    if (window.history.state?.__yinilow && window.history.length > 1) {
+      window.history.back();
+    } else {
+      setScreen({ type: "home", category: null, product: null });
+    }
+  };
+
   const switchWorld = (world) => {
     setActive(world);
     setScreen({ type: "home", category: null, product: null });
@@ -2367,6 +2497,12 @@ export function App() {
   const openTracking = (order = null) => {
     setActive("clothing");
     setScreen({ type: "tracking", category: "Track", product: null, order });
+  };
+  const search = (rawQuery) => {
+    const query = (rawQuery ?? "").trim();
+    if (!query) return;
+    setActive("clothing");
+    setScreen({ type: "browse", category: "Search", product: null, query });
   };
   const showOrderCreated = (order) => {
     setCreatedOrder(order);
@@ -2413,10 +2549,10 @@ export function App() {
   };
   const page = useMemo(() => {
     if (screen.type === "browse") {
-      return <BrowsePage active={active} cardStates={cardStates} category={screen.category} onAddToBag={holdProduct} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
+      return <BrowsePage active={active} cardStates={cardStates} category={screen.category} query={screen.query} onAddToBag={holdProduct} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
     }
     if (screen.type === "product" && screen.product) {
-      return <ProductDetail active={active} cardStates={cardStates} product={screen.product} onBack={() => browse(screen.category)} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} />;
+      return <ProductDetail active={active} cardStates={cardStates} product={screen.product} onBack={goBack} onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} onAddToBag={holdProduct} />;
     }
     if (screen.type === "cart") {
       return <CartPage onBrowse={browse} onOpenProduct={openProduct} onCheckout={openCheckout} refreshCartCount={setCartCount} />;
@@ -2449,7 +2585,7 @@ export function App() {
 
   return (
     <main className={active === "home" ? "app home-mode" : "app fashion-mode"}>
-      <Header active={active} setActive={switchWorld} cartCount={cartCount} onCart={openCart} onSeller={openSeller} onTrack={() => openTracking()} />
+      <Header active={active} setActive={switchWorld} cartCount={cartCount} onCart={openCart} onSeller={openSeller} onTrack={() => openTracking()} onSearch={search} />
       {active === "clothing" && catalogLoading ? (
         <div className="api-status loading" role="status">Loading live catalog…</div>
       ) : null}
@@ -2460,7 +2596,7 @@ export function App() {
       ) : null}
       {toast ? <ToastNotice toast={toast} onClose={() => setToast(null)} /> : null}
       {page}
-      <Footer active={active} />
+      <Footer active={active} onBrowse={browse} onTrack={() => openTracking()} />
     </main>
   );
 }
