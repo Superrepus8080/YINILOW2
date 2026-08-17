@@ -2300,8 +2300,17 @@ export function App() {
 
     getCart()
       .then((cart) => {
-        if (!cancelled) {
-          setCartCount(cart.items?.length ?? 0);
+        if (cancelled) return;
+        const items = cart.items ?? [];
+        setCartCount(items.length);
+        // Reflect items already in the bag as "added" so the CTA stays correct
+        // across reloads instead of resetting to "Add to bag".
+        const held = {};
+        for (const item of items) {
+          if (item.listingId) held[item.listingId] = "added";
+        }
+        if (Object.keys(held).length > 0) {
+          setCardStates((states) => ({ ...held, ...states }));
         }
       })
       .catch(() => {});
