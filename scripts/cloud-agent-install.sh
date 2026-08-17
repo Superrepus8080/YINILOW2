@@ -6,6 +6,16 @@ set -euo pipefail
 MAVEN_VERSION="3.9.9"
 MAVEN_HOME="/opt/apache-maven-${MAVEN_VERSION}"
 
+# The Vert.x backend targets Java release 17. Ensure a JDK >= 17 is present;
+# most base images already ship one, so this is a guard for pristine images.
+java_major="$(java -version 2>&1 | sed -n '1s/.*version "\([0-9]*\).*/\1/p' || true)"
+if [ -z "${java_major}" ] || [ "${java_major}" -lt 17 ]; then
+  echo "Installing a JDK (found: '${java_major:-none}')"
+  sudo apt-get update -y
+  sudo apt-get install -y --no-install-recommends default-jdk-headless
+fi
+java -version
+
 # The default base image ships Node 22 and a JDK but no Maven, and the
 # repository's backend/Dockerfile pins Maven 3.9 (whose default compiler plugin
 # honors maven.compiler.release=17). Match that here; the apt package is 3.8.x
