@@ -84,6 +84,7 @@ import homeEarbuds from "./assets/home-earbuds.jpg";
 import findMatchReference from "./assets/find-match-reference.png";
 import { addToBag, checkoutQuote, clearSellerSession, confirmPayment as verifyPaymentReference, createAdminListing, createOrder, createSellerAccount, getAdminListings, getAdminOrders, getCart, getListings, getOrder, getStoredSellerSession, initializePayment, recordRealtimeTelemetry, sellerLogin, sellerLogout, updateAdminListingVisibility, updateAdminOrderStatus } from "./api";
 import { createRealtimeDataChannel } from "./realtime";
+import { useLiveActivity } from "./support.js";
 
 const catalogProductImages = {
   "black-bomber-jacket": dropBlackBomber,
@@ -384,12 +385,13 @@ function Header({ active, setActive, cartCount = 0, onCart, onSeller, onTrack, o
 }
 
 function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, products }) {
+  const liveCount = useLiveActivity();
   return (
     <>
       <CategoryNav
         items={clothingNavItems(products)}
         active={null}
-        note="ONE MARKETPLACE. TWO SHOPPING WORLDS."
+        note="CURATED THRIFT & FRESH DROPS"
         onSelect={onBrowse}
       />
       <section className="hero fashion-hero">
@@ -400,12 +402,25 @@ function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, product
             <button className="dark-btn" onClick={() => onBrowse("New Drop")}>Shop now <ArrowRight size={19} /></button>
             <button className="ghost-btn" onClick={() => onBrowse("Dig the Pile")}>Dig the pile <ArrowRight size={19} /></button>
           </div>
+          <div className="hero-activity">
+            <span className="activity-dot" />
+            <span>{liveCount} people shopping now</span>
+          </div>
         </div>
         <img className="fashion-people" src={clothingHero} alt="YINILOW fashion models" />
         <aside className="hero-stickers">
+          <svg className="doodle doodle-crown" viewBox="0 0 32 20" aria-hidden="true">
+            <path d="M4 16 L8 6 L12 12 L16 4 L20 12 L24 6 L28 16" fill="none" stroke="#090909" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           <div className="seal"><Diamond size={31} /> CURATED<br />WITH CARE</div>
           <span>Support local sellers</span>
+          <svg className="doodle doodle-star" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2 L14 9 L21 9 L15.5 13.5 L17.5 21 L12 16.5 L6.5 21 L8.5 13.5 L3 9 L10 9 Z" fill="none" stroke="#090909" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           <p>ONE ACCOUNT<br />ONE CART<br />ONE CHECKOUT</p>
+          <svg className="doodle doodle-squiggle" viewBox="0 0 40 24" aria-hidden="true">
+            <path d="M2 12 Q10 2 18 12 Q26 22 34 12" fill="none" stroke="#090909" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
         </aside>
       </section>
       <TrustBar
@@ -432,6 +447,16 @@ function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, product
           />
         ))}
       </div>
+      <section className="dig-pile-callout">
+        <div className="dig-pile-callout-copy">
+          <h2>DIG THE PILE</h2>
+          <p>Hidden gems. One-of-ones. Real thrift energy.<br />Every item is unique — when it's gone, it's gone.</p>
+          <button className="dark-btn" onClick={() => onBrowse("Dig the Pile")}>
+            Start digging <ArrowRight size={19} />
+          </button>
+        </div>
+        <img src={clothingDigPile} alt="Dig the Pile — curated thrift finds" />
+      </section>
       <TrustBar
         compact
         items={[
