@@ -565,6 +565,54 @@ video {
   font-weight: 950;
 }
 
+.hero-activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #45413b;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.activity-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #2ecc40;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(.7); }
+}
+
+.doodle {
+  position: absolute;
+  pointer-events: none;
+}
+
+.doodle-crown {
+  width: 36px;
+  top: 8px;
+  right: 28px;
+}
+
+.doodle-star {
+  width: 22px;
+  top: 95px;
+  right: 5px;
+}
+
+.doodle-squiggle {
+  width: 42px;
+  bottom: 12px;
+  right: 55px;
+}
+
 .trust-bar {
   margin-top: 12px;
   border: 1px solid #ebe6de;
@@ -1103,6 +1151,43 @@ video {
     background: #15110b;
     color: #fff;
   }
+}
+
+.dig-pile-callout {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 32px;
+  padding: 38px 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff8e1 0%, #fff3cc 100%);
+  border: 1px solid #ede5d4;
+  overflow: hidden;
+}
+
+.dig-pile-callout-copy h2 {
+  margin: 0;
+  font-family: Anton, Impact, "Arial Black", sans-serif;
+  font-size: 38px;
+  letter-spacing: .01em;
+  line-height: 1;
+}
+
+.dig-pile-callout-copy p {
+  margin: 12px 0 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 600;
+  color: #3a3630;
+}
+
+.dig-pile-callout img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e6dfd2;
 }
 
 .home-hero {
@@ -4103,6 +4188,16 @@ video {
     display: none;
   }
 
+  .dig-pile-callout {
+    grid-template-columns: 1fr;
+    padding: 28px 24px;
+    gap: 20px;
+  }
+
+  .dig-pile-callout img {
+    height: 180px;
+  }
+
   .hero-copy,
   .home-copy {
     padding: 28px;
@@ -4211,6 +4306,18 @@ video {
     flex-direction: column;
     gap: 10px;
     align-items: flex-start;
+  }
+
+  .dig-pile-callout {
+    padding: 24px 18px;
+  }
+
+  .dig-pile-callout-copy h2 {
+    font-size: 28px;
+  }
+
+  .dig-pile-callout img {
+    height: 160px;
   }
 
   .promo-grid,
