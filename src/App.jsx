@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Bell,
   Camera as CameraIcon,
+  Check,
   ChevronDown as CaretDown,
   Clock3,
   Circle,
@@ -19,14 +20,17 @@ import {
   MapPin,
   Monitor as Desktop,
   Package,
+  Plus,
   RotateCcw,
   Recycle,
+  Ruler,
   Search as MagnifyingGlass,
   ShieldCheck,
   ShoppingCart,
   Shuffle,
   SlidersHorizontal,
   Sparkles as Sparkle,
+  Tag,
   Truck,
   User,
   WashingMachine,
@@ -421,6 +425,7 @@ function ClothingPage({ cardStates, onAddToBag, onBrowse, onOpenProduct, product
             key={product.id}
             product={product}
             fashion
+            showcase
             onAddToBag={onAddToBag}
             onOpen={onOpenProduct}
             state={cardStates[product.listingId] ?? "idle"}
@@ -580,7 +585,7 @@ function ToastNotice({ toast, onClose }) {
   );
 }
 
-function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
+function ProductCard({ product, fashion, showcase, onAddToBag, onOpen, state = "idle" }) {
   const canAdd = Boolean(onAddToBag && product.listingId);
   const actionLabel =
     state === "adding"
@@ -597,6 +602,51 @@ function ProductCard({ product, fashion, onAddToBag, onOpen, state = "idle" }) {
   function handleAdd(event) {
     event.stopPropagation();
     onAddToBag?.(product);
+  }
+
+  if (showcase) {
+    const addIcon =
+      state === "added" ? <Check size={19} /> : <Plus size={19} />;
+    return (
+      <article className="product-card fashion-product-card showcase-product-card has-card-action">
+        <div className="product-image">
+          <img src={product.image} alt={product.name} loading="lazy" onError={handleImageFallback} />
+          {/* Empty stretched control keeps the whole card openable without
+              nesting interactive elements; its label carries the product name. */}
+          <button
+            className="card-open-btn"
+            aria-label={`View ${product.name}`}
+            onClick={() => onOpen?.(product)}
+          />
+          {/* Presentational detail revealed on hover/focus; the name is already
+              announced through the open control above. */}
+          <div className="card-showcase-overlay" aria-hidden="true">
+            <span className="card-showcase-name">{product.name}</span>
+            <strong className="card-showcase-price">{product.price}</strong>
+            {product.condition || product.sizeLabel ? (
+              <div className="card-showcase-attrs">
+                {product.condition ? (
+                  <span><Tag size={13} /> Condition: {product.condition}</span>
+                ) : null}
+                {product.sizeLabel ? (
+                  <span><Ruler size={13} /> Size: {product.sizeLabel}</span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {canAdd ? (
+          <button
+            className={`card-add-btn card-add-round ${state}`}
+            aria-label={`${actionLabel} ${product.name} to bag`}
+            disabled={state === "adding" || state === "added" || state === "conflict"}
+            onClick={handleAdd}
+          >
+            {addIcon}
+          </button>
+        ) : null}
+      </article>
+    );
   }
 
   return (

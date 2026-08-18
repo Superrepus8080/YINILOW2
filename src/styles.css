@@ -941,6 +941,163 @@ button {
   font-weight: 950;
 }
 
+/* Showcase card: clean image by default, product detail revealed on hover.
+   Used by the homepage featured grid. */
+.showcase-product-card {
+  border-radius: 16px;
+}
+
+.showcase-product-card.has-card-action {
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.showcase-product-card .product-image {
+  height: auto;
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  border-color: #ece7df;
+  background: #f2efe9;
+}
+
+.showcase-product-card .product-image img {
+  outline: none;
+  filter: none;
+}
+
+.showcase-product-card:hover .product-image,
+.showcase-product-card:has(.card-open-btn:focus-visible) .product-image {
+  border-color: #e2dccf;
+  box-shadow: 0 20px 40px rgba(24, 19, 12, .16);
+}
+
+/* Stretched, text-free open control spanning the whole image. */
+.showcase-product-card .card-open-btn {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.showcase-product-card .card-showcase-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 46px 14px 14px;
+  color: #fff;
+  background: linear-gradient(
+    180deg,
+    rgba(21, 17, 11, 0) 0%,
+    rgba(21, 17, 11, .30) 34%,
+    rgba(21, 17, 11, .74) 100%
+  );
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .2s ease, transform .2s ease;
+  pointer-events: none;
+}
+
+.showcase-product-card:hover .card-showcase-overlay,
+.showcase-product-card:has(.card-open-btn:focus-visible) .card-showcase-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.showcase-product-card .card-showcase-name {
+  font-size: 15px;
+  line-height: 1.15;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+
+.showcase-product-card .card-showcase-price {
+  font-size: 14px;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+}
+
+.showcase-product-card .card-showcase-attrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 5px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, .22);
+  padding-right: 46px;
+}
+
+.showcase-product-card .card-showcase-attrs span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 650;
+  color: rgba(255, 255, 255, .92);
+}
+
+.showcase-product-card .card-showcase-attrs svg {
+  opacity: .85;
+}
+
+/* Round add button: subtle by default, filled when the card is engaged. */
+.showcase-product-card .card-add-btn.card-add-round {
+  left: auto;
+  right: 12px;
+  bottom: 12px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(21, 17, 11, .08);
+  background: #fff;
+  color: #15110b;
+  box-shadow: 0 6px 16px rgba(24, 19, 12, .18);
+  z-index: 5;
+}
+
+.showcase-product-card:hover .card-add-round,
+.showcase-product-card:has(.card-open-btn:focus-visible) .card-add-round {
+  border-color: transparent;
+  background: #15110b;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(24, 19, 12, .30);
+}
+
+.showcase-product-card .card-add-round:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+
+.showcase-product-card .card-add-round:active {
+  transform: scale(.94);
+}
+
+.showcase-product-card .card-add-round.added {
+  background: #eaf7e4;
+  color: #1f7a34;
+  border-color: #cdeabf;
+}
+
+/* Touch devices have no hover: keep detail and the filled button visible. */
+@media (hover: none) and (pointer: coarse) {
+  .showcase-product-card .card-showcase-overlay {
+    opacity: 1;
+    transform: none;
+  }
+
+  .showcase-product-card .card-add-round {
+    border-color: transparent;
+    background: #15110b;
+    color: #fff;
+  }
+}
+
 .home-hero {
   min-height: 306px;
   height: 306px;
