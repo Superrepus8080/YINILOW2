@@ -29,6 +29,13 @@ button {
   cursor: pointer;
 }
 
+/* Media should never force a container wider than the viewport. */
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -3015,7 +3022,7 @@ button {
 
 .drop-dashboard {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 28px;
   margin-top: 20px;
   align-items: start;
@@ -3025,6 +3032,10 @@ button {
 .grab-panel,
 .recap-panel,
 .schedule-panel {
+  /* Grid children must be able to shrink below their content's intrinsic
+     width, otherwise they overflow the viewport when the grid collapses to
+     a single column on mobile. */
+  min-width: 0;
   border: 1px solid #ebe5dc;
   border-radius: 16px;
   background: #fffdfa;
@@ -3073,7 +3084,7 @@ button {
 
 .drop-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -3265,7 +3276,7 @@ button {
 
 .drop-lower {
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: minmax(0, 1fr) 420px;
   gap: 28px;
   margin-top: 20px;
 }
@@ -3277,7 +3288,7 @@ button {
 
 .recap-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -4260,16 +4271,29 @@ button {
     justify-self: start;
   }
 
-  .pile-actions,
-  .drop-tabs {
+  .pile-actions {
     overflow-x: auto;
     justify-content: start;
     padding-bottom: 4px;
   }
 
-  .pile-actions .ghost-btn,
-  .drop-tabs button {
+  .pile-actions .ghost-btn {
     flex: 0 0 auto;
+  }
+
+  /* Tabs wrap onto multiple rows on mobile rather than scrolling sideways. */
+  .drop-tabs {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: start;
+  }
+
+  .drop-tabs button {
+    flex: 0 1 auto;
+  }
+
+  .drop-tabs button:last-child {
+    margin-left: 0;
   }
 
   .pile-stage,
