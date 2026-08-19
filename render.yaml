@@ -1,5 +1,11 @@
 # YINILOW2 Render Blueprint
-# Static React/Vite storefront plus Vert.x API.
+# Static React/Vite storefront plus Vert.x API backed by managed PostgreSQL.
+
+databases:
+  - name: yinilow2-db
+    plan: free
+    databaseName: yinilow
+    user: yinilow
 
 services:
   - type: web
@@ -11,6 +17,14 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /health
+    envVars:
+      # The API auto-detects DATABASE_URL and runs on Postgres (durable catalog,
+      # holds, orders, and payments with DB-enforced one-off/idempotency
+      # constraints). Without it, it falls back to in-memory mode.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: yinilow2-db
+          property: connectionString
 
   - type: web
     name: yinilow2

@@ -34,6 +34,21 @@ if [ "${current_mvn_version}" != "${MAVEN_VERSION}" ]; then
 fi
 mvn -version
 
+# PostgreSQL for durable local data. The Vert.x API auto-detects DATABASE_URL
+# and runs on Postgres; without it (or if the server is unavailable) it falls
+# back to in-memory mode, so this is a best-effort convenience for local dev.
+if [ ! -d /usr/lib/postgresql ]; then
+  echo "Installing PostgreSQL"
+  sudo apt-get update -y
+  sudo apt-get install -y --no-install-recommends postgresql postgresql-client
+fi
+PG_BIN="$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1 || true)"
+PGDATA="${HOME}/.yinilow-pgdata"
+if [ -n "${PG_BIN}" ] && [ ! -f "${PGDATA}/PG_VERSION" ]; then
+  echo "Initializing PostgreSQL cluster at ${PGDATA}"
+  "${PG_BIN}/initdb" -D "${PGDATA}" -U postgres --auth-local=trust --auth-host=trust
+fi
+
 # Frontend dependencies.
 npm install
 
