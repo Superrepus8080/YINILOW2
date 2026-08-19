@@ -1,10 +1,11 @@
 {
   "name": "YINILOW2 Clothing OS",
   "install": "bash scripts/cloud-agent-install.sh",
+  "start": "bash scripts/start-postgres.sh",
   "terminals": [
     {
       "name": "api",
-      "command": "cd backend && mvn -B -DskipTests package && java -jar target/yinilow-clothing-os-api-0.1.0-SNAPSHOT.jar"
+      "command": "export DATABASE_URL=\"postgres://postgres@127.0.0.1:5432/yinilow?sslmode=disable\" && cd backend && mvn -B -DskipTests package && java -jar target/yinilow-clothing-os-api-0.1.0-SNAPSHOT.jar"
     },
     {
       "name": "web",
