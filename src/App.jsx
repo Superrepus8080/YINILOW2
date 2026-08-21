@@ -528,7 +528,7 @@ function HomePage({ onBrowse, onOpenProduct }) {
           <button>Learn more <ArrowRight size={15} /></button>
         </aside>
       </section>
-      <HomeCategories />
+      <HomeCategories onBrowse={onBrowse} />
       <TrustBar
         compact
         items={[
@@ -718,7 +718,7 @@ function ProductCard({ product, fashion, showcase, onAddToBag, onOpen, state = "
   );
 }
 
-function HomeCategories() {
+function HomeCategories({ onBrowse }) {
   const categories = [
     [CookingPot, "Kitchen"],
     [Fan, "Small Appliances"],
@@ -733,7 +733,7 @@ function HomeCategories() {
   return (
     <section className="home-categories">
       {categories.map(([Icon, label]) => (
-        <button key={label}>
+        <button key={label} onClick={() => onBrowse?.(label)}>
           <Icon size={25} />
           <span>{label}</span>
         </button>
@@ -807,9 +807,7 @@ function BrowsePage({ active, cardStates, category, query, onAddToBag, onBrowse,
     results = products.filter(
       (product) =>
         product.category === category ||
-        category === "Stock Drop" ||
-        category === "Stock Drops" ||
-        category === "Dig the Pile",
+        (category === "Energy Smart" && product.category === "Power & Energy"),
     );
   }
 
@@ -1643,7 +1641,8 @@ function CheckoutPage({ onBrowse, onOrderCreated, refreshCartCount }) {
     if (!canSubmit || submitState === "submitting") return;
     setSubmitState("submitting");
     try {
-      const order = await createOrder(form, form.paymentMethod);
+        const { paymentMethod, momoProvider, deliveryMethod, ...deliveryAddress } = form;
+      const order = await createOrder(deliveryAddress, paymentMethod);
       refreshCartCount(0);
       setSubmitState("created");
       onOrderCreated(order);
@@ -2100,7 +2099,7 @@ function DigPilePage({ onBrowse, onOpenProduct, clothingCatalog = [] }) {
               className={className}
               onFocus={() => realtime.trackTag(label)}
               onMouseEnter={() => realtime.trackTag(label)}
-              onClick={() => realtime.trackTag(label)}
+              onClick={() => { realtime.trackTag(label); onBrowse(label); }}
             >
               {label}
             </button>
@@ -2121,7 +2120,7 @@ function DigPilePage({ onBrowse, onOpenProduct, clothingCatalog = [] }) {
   );
 }
 
-function StockDropPage({ onBrowse, onOpenProduct, clothingCatalog = [] }) {
+function StockDropPage({ onBrowse, onOpenProduct, onCart, clothingCatalog = [] }) {
   const schedule = [
     ["Vintage Heatwave", "Streetwear + Vintage", "Today, 6:00 PM", "08:42:31", clothingProducts[0].image],
     ["90s Sports Classics", "Sportswear + Retro", "Today, 8:00 PM", "10:42:31", clothingProducts[2].image],
@@ -2193,14 +2192,14 @@ function StockDropPage({ onBrowse, onOpenProduct, clothingCatalog = [] }) {
               <b>{product.grabPrice}</b>
             </div>
           ))}
-          <button className="dark-btn">View grab bag (3) <ArrowRight size={17} /></button>
+          <button className="dark-btn" onClick={onCart}>View grab bag (3) <ArrowRight size={17} /></button>
           <div className="metrics">
             <h3>Live metrics</h3>
             <p><span>Grabbers</span><strong>126</strong></p>
             <p><span>Items left</span><strong>48</strong></p>
             <p><span>Drop ends in</span><strong>08:42</strong></p>
           </div>
-          <button className="checkout-btn">Proceed to checkout <ArrowRight size={17} /></button>
+          <button className="checkout-btn" onClick={onCart}>Proceed to checkout <ArrowRight size={17} /></button>
         </aside>
       </section>
       <section className="drop-lower">
@@ -2544,8 +2543,8 @@ export function App() {
       setScreen({ type: "dig", category, product: null });
       return;
     }
-    if (active === "clothing" && category === "Stock Drop") {
-      setScreen({ type: "stockDrop", category, product: null });
+    if (category === "Stock Drop" || category === "Stock Drops") {
+      setScreen({ type: "stockDrop", category: "Stock Drop", product: null });
       return;
     }
     if (active === "home" && category === "Find My Match") {
@@ -2648,7 +2647,7 @@ export function App() {
       return <DigPilePage onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
     }
     if (screen.type === "stockDrop") {
-      return <StockDropPage onBrowse={browse} onOpenProduct={openProduct} clothingCatalog={clothingCatalog} />;
+      return <StockDropPage onBrowse={browse} onOpenProduct={openProduct} onCart={openCart} clothingCatalog={clothingCatalog} />;
     }
     if (screen.type === "findMatch") {
       return <FindMatchPage onBrowse={browse} onOpenProduct={openProduct} />;

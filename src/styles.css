@@ -975,6 +975,13 @@ video {
   color: #9b261c;
 }
 
+.card-add-btn.conflict {
+  border-color: #ddd5c8;
+  background: #f3ede4;
+  color: #7a6e62;
+  cursor: not-allowed;
+}
+
 .rating {
   display: block;
   color: #23201b;
@@ -1137,6 +1144,13 @@ video {
   background: #eaf7e4;
   color: #1f7a34;
   border-color: #cdeabf;
+}
+
+.showcase-product-card .card-add-round.conflict {
+  background: #f3ede4;
+  color: #7a6e62;
+  border-color: #ddd5c8;
+  cursor: not-allowed;
 }
 
 /* Touch devices have no hover: keep detail and the filled button visible. */
